@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 //each site represents a separate database -- it has its own lock table and variable copies
-public class Site {
+public class DBSite {
 
     // the id for this site
     public int id;
@@ -16,7 +16,7 @@ public class Site {
     public HashSet<Integer> variables;
 
 
-    public Site(int id){
+    public DBSite(int id){
         this.id = id;
         this.locktable = new HashMap<>();
         this.variables = new HashSet<>();

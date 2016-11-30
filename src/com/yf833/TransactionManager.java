@@ -1,8 +1,9 @@
 package com.yf833;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Queue;
 import java.util.Scanner;
 
 
@@ -18,30 +19,32 @@ public class TransactionManager {
     public static final int NUM_SITES = 10;
     public static final int NUM_VARIABLES = 20;
 
-    // list of transactions
-    public static ArrayList<Action> transactions;
     // list of sites
-    public static ArrayList<Site> sites;
+    public static ArrayList<DBSite> sites;
+
+    // track running transactions, committed transactions, aborted transactions (store their ids in sets)
+    public static HashSet<Integer> running_transactions = new HashSet<>();
+    public static HashSet<Integer> committed_transactions = new HashSet<>();
+    public static HashSet<Integer> aborted_transactions = new HashSet<>();
+
     // a queue of transactions that are waiting
-    public static ArrayList<Action> waiting;
-    // keep track of the current time
-    public static int time=0;
+    public static Queue<Action> waiting;
 
 
 
-    public static void main(String[] args) throws FileNotFoundException {
+    public static void main(String[] args) throws Exception {
 
         // (1) initialize sites (ids from 1 to N)
         sites = new ArrayList<>();
         for(int site_id=1; site_id<=NUM_SITES; site_id++){
-            sites.add(new Site(site_id));
+            sites.add(new DBSite(site_id));
         }
 
         // (2) initialize variables and create copies at sites
         for(int var_id = 1; var_id<=NUM_VARIABLES; var_id++){
             //if even variable, put in every site
             if(var_id%2 == 0){
-                for(Site s : sites){
+                for(DBSite s : sites){
                     s.variables.add(var_id);
                 }
             }
@@ -55,6 +58,9 @@ public class TransactionManager {
 
         // (3) read in the list of transactions from the test file and place in a queue
         Scanner scan = new Scanner(new File(args[0]));
+
+        // keep track of the current time
+        int time=0;
         while(scan.hasNextLine()){
 
             //get the next line and hold all actions to perform at the current time in a list
@@ -70,10 +76,16 @@ public class TransactionManager {
             //parse the next line of actions
             else {
                 System.out.println("time" + time + ": processing... " + nextline);
-                String[] actionsarr = nextline.split(";");
+                String[] actions_arr = nextline.split(";");
 
-                for(String s : actionsarr){
+                //initialize a list of actions for the current time
+                for(String s : actions_arr){
                     currentactions.add(Util.strToAction(s.trim(), time));
+                }
+
+                //process all actions at current time
+                for(Action a : currentactions){
+                    processAction(a);
                 }
             }
 
@@ -86,10 +98,27 @@ public class TransactionManager {
     }
 
 
-    //reads in the next line of input
-    public static void processNextTransactions(Scanner scan){
 
+    //process a single begin(), end(), R(), or W() action
+    public static void processAction(Action a) throws Exception {
+        switch(a.type){
+            case "begin":
+                running_transactions.add(a.transactionid);
+                break;
+            case "end":
+                running_transactions.remove(a.transactionid);
+                committed_transactions.add(a.transactionid);
+                break;
+            case "W":
+                break;
+            case "R":
+                break;
+            default:
+                System.out.println("ERROR: action contains an invalid type");
+                throw new Exception();
+        }
     }
+
 
 
     //dump the committed values of all copies of all variables at all sites, sorted by site
@@ -97,7 +126,7 @@ public class TransactionManager {
 
     }
 
-    public static void dump(Site i){
+    public static void dump(DBSite i){
 
     }
 
