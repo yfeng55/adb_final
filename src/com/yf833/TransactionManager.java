@@ -1,6 +1,7 @@
 package com.yf833;
 
-import java.lang.reflect.Array;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -18,14 +19,17 @@ public class TransactionManager {
     public static final int NUM_VARIABLES = 20;
 
     // list of transactions
-    public static ArrayList<Transaction> transactions;
+    public static ArrayList<Action> transactions;
     // list of sites
     public static ArrayList<Site> sites;
     // a queue of transactions that are waiting
-    public static ArrayList<Transaction> waiting;
+    public static ArrayList<Action> waiting;
+    // keep track of the current time
+    public static int time=0;
 
 
-    public static void main(String[] args) {
+
+    public static void main(String[] args) throws FileNotFoundException {
 
         // (1) initialize sites (ids from 1 to N)
         sites = new ArrayList<>();
@@ -49,14 +53,44 @@ public class TransactionManager {
         }
 
 
+        // (3) read in the list of transactions from the test file and place in a queue
+        Scanner scan = new Scanner(new File(args[0]));
+        while(scan.hasNextLine()){
+
+            //get the next line and hold all actions to perform at the current time in a list
+            String nextline = scan.nextLine();
+            ArrayList<Action> currentactions = new ArrayList<>();
+
+            //stop scanning after a newline is encountered (check for all whitespaces)
+            if(nextline.trim().length() == 0){
+                System.out.println("END SCAN");
+                scan.close();
+                break;
+            }
+            //parse the next line of actions
+            else {
+                System.out.println("time" + time + ": processing... " + nextline);
+                String[] actionsarr = nextline.split(";");
+
+                for(String s : actionsarr){
+                    currentactions.add(Util.strToAction(s.trim(), time));
+                }
+            }
+
+            //increment time after processing each line
+            time++;
+        }
+
+
         System.out.println();
     }
 
 
     //reads in the next line of input
-    public static void getNextTransaction(Scanner scan){
+    public static void processNextTransactions(Scanner scan){
 
     }
+
 
     //dump the committed values of all copies of all variables at all sites, sorted by site
     public static void dump(){
