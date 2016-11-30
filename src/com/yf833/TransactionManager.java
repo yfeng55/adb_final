@@ -27,11 +27,29 @@ public class TransactionManager {
 
     public static void main(String[] args) {
 
-        // (1) initialize sites
-
+        // (1) initialize sites (ids from 1 to N)
+        sites = new ArrayList<>();
+        for(int site_id=1; site_id<=NUM_SITES; site_id++){
+            sites.add(new Site(site_id));
+        }
 
         // (2) initialize variables and create copies at sites
+        for(int var_id = 1; var_id<=NUM_VARIABLES; var_id++){
+            //if even variable, put in every site
+            if(var_id%2 == 0){
+                for(Site s : sites){
+                    s.variables.add(var_id);
+                }
+            }
+            //if odd variable, put in site (i%10+1)
+            else{
+                int insert_i = (var_id%10) + 1;
+                sites.get(insert_i -1).variables.add(var_id);
+            }
+        }
 
+
+        System.out.println();
     }
 
 
