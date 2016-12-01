@@ -223,7 +223,10 @@ public class TransactionManager {
 
   // dump the committed values of all copies of all variables at all sites, sorted by site
   public static void dump() {
-
+    System.out.println("~Dumping all~");
+    for (DBSite site : sites) {
+      dump(site);
+    }
   }
 
   public static void dump(DBSite i) {
