@@ -39,5 +39,11 @@ public class Action {
     }
 
 
+    public String toString(){
+        String output = "";
+        output += "T" + transactionid + " | " + type;
+        return output;
+    }
+
 
 }

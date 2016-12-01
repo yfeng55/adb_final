@@ -1,10 +1,7 @@
 package com.yf833;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Queue;
-import java.util.Scanner;
+import java.util.*;
 
 
 // the TransactionManager initializes the components of the system and accepts transactions
@@ -20,10 +17,16 @@ public class TransactionManager {
     public static final int NUM_VARIABLES = 20;
 
     // list of sites
-    public static ArrayList<DBSite> sites;
+    public static HashMap<Integer, DBSite> sites;
 
-    // track running transactions, committed transactions, aborted transactions (store their ids in sets)
+    // list of sites that a variable is present at
+    public static HashMap<Integer, ArrayList<Integer>> sitescontainingvar = new HashMap<>();
+
+    // lookuptable of all transactions that are currently running and their actions
+    public static HashMap<Integer, Integer> transactions = new HashMap<>();
     public static HashSet<Integer> running_transactions = new HashSet<>();
+
+    // track committed transactions and aborted transactions (store their ids in sets)
     public static HashSet<Integer> committed_transactions = new HashSet<>();
     public static HashSet<Integer> aborted_transactions = new HashSet<>();
 
@@ -31,27 +34,32 @@ public class TransactionManager {
     public static Queue<Action> waiting;
 
 
-
     public static void main(String[] args) throws Exception {
 
         // (1) initialize sites (ids from 1 to N)
-        sites = new ArrayList<>();
+        sites = new HashMap<>();
         for(int site_id=1; site_id<=NUM_SITES; site_id++){
-            sites.add(new DBSite(site_id));
+            sites.put(site_id, new DBSite(site_id));
         }
 
         // (2) initialize variables and create copies at sites
         for(int var_id = 1; var_id<=NUM_VARIABLES; var_id++){
+
+            sitescontainingvar.put(var_id, new ArrayList<Integer>());
+
             //if even variable, put in every site
             if(var_id%2 == 0){
-                for(DBSite s : sites){
-                    s.variables.add(var_id);
+                for(int site_i : sites.keySet()){
+                    sites.get(site_i).variables.add(var_id);
+                    sitescontainingvar.get(var_id).add(sites.get(site_i).id);
+                    sites.get(site_i).locktable.put(var_id, DBSite.Lock.NONE);
                 }
             }
             //if odd variable, put in site (i%10+1)
             else{
                 int insert_i = (var_id%10) + 1;
-                sites.get(insert_i -1).variables.add(var_id);
+                sites.get(insert_i).variables.add(var_id);
+                sitescontainingvar.get(var_id).add(insert_i);
             }
         }
 
@@ -85,7 +93,7 @@ public class TransactionManager {
 
                 //process all actions at current time
                 for(Action a : currentactions){
-                    processAction(a);
+                    processAction(a, time);
                 }
             }
 
@@ -98,20 +106,29 @@ public class TransactionManager {
     }
 
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     //process a single begin(), end(), R(), or W() action
-    public static void processAction(Action a) throws Exception {
+    public static void processAction(Action a, int time) throws Exception {
         switch(a.type){
             case "begin":
+                transactions.put(a.transactionid, time);
                 running_transactions.add(a.transactionid);
                 break;
             case "end":
                 running_transactions.remove(a.transactionid);
                 committed_transactions.add(a.transactionid);
+                //TODO: commit transaction at all sites that contain it
                 break;
             case "W":
+                //acquire write-lock for all sites containing the current variable
+                for(int siteindex : sitescontainingvar.get(a.variable)){
+
+                }
                 break;
             case "R":
+                //acquire read-lock
+                //read variable at a site that contains it
                 break;
             default:
                 System.out.println("ERROR: action contains an invalid type");
@@ -119,6 +136,26 @@ public class TransactionManager {
         }
     }
 
+
+    //TODO: print the states of the TM and all DBSites
+    public static void querystate(){
+
+    }
+
+    //TODO: process a write action
+    public static void processW(){
+
+    }
+
+    //TODO: process a read action
+    public static void processR(Action a){
+        //search for a site that contains the variable
+        for(int site_i : sites.keySet()){
+            if(sites.get(site_i).variables.contains(a.variable)){
+                System.out.println(a.toString() + " from site ");
+            }
+        }
+    }
 
 
     //dump the committed values of all copies of all variables at all sites, sorted by site
@@ -138,3 +175,12 @@ public class TransactionManager {
 
 
 }
+
+
+
+
+
+
+
+
+
