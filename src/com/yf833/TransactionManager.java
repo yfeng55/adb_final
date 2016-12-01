@@ -17,7 +17,7 @@ public class TransactionManager {
     public static final int NUM_VARIABLES = 20;
 
     // list of sites
-    public static HashMap<Integer, DBSite> sites;
+    public static DBSite[] sites;
 
     // list of sites that a variable is present at
     public static HashMap<Integer, ArrayList<Integer>> sitescontainingvar = new HashMap<>();
@@ -37,9 +37,9 @@ public class TransactionManager {
     public static void main(String[] args) throws Exception {
 
         // (1) initialize sites (ids from 1 to N)
-        sites = new HashMap<>();
+        sites = new DBSite[NUM_SITES];
         for(int site_id=1; site_id<=NUM_SITES; site_id++){
-            sites.put(site_id, new DBSite(site_id));
+            sites[site_id-1] = new DBSite(site_id);
         }
 
         // (2) initialize variables and create copies at sites
@@ -49,20 +49,19 @@ public class TransactionManager {
 
             //if even variable, put in every site
             if(var_id%2 == 0){
-                for(int site_i : sites.keySet()){
-                    sites.get(site_i).variables.add(var_id);
-                    sitescontainingvar.get(var_id).add(sites.get(site_i).id);
-                    sites.get(site_i).locktable.put(var_id, null);
+                for(DBSite site : sites){
+                    site.variables.add(var_id);
+                    sitescontainingvar.get(var_id).add(site.id);
+                    site.locktable.put(var_id, null);
                 }
             }
             //if odd variable, put in site (i%10+1)
             else{
-                int insert_i = (var_id%10) + 1;
-                sites.get(insert_i).variables.add(var_id);
-                sitescontainingvar.get(var_id).add(insert_i);
+                int oddvar_location = (var_id%10) + 1;
+                sites[oddvar_location-1].variables.add(var_id);
+                sitescontainingvar.get(var_id).add(oddvar_location);
             }
         }
-
 
         // (3) read in the list of transactions from the test file and place in a queue
         Scanner scan = new Scanner(new File(args[0]));
@@ -112,13 +111,19 @@ public class TransactionManager {
     public static void processAction(Action a, int time) throws Exception {
         switch(a.type){
             case "begin":
-                transactions.put(a.transactionid, time);
-                running_transactions.add(a.transactionid);
+                transactions.put(a.transac_id, time);
+                running_transactions.add(a.transac_id);
                 conflictgraph.add(new ArrayList<Integer>());
+
+                //fill conflictgraph with 0s
+                for(ArrayList<Integer> row : conflictgraph){
+                    Util.fillwithNZeroes(row, conflictgraph.size());
+                }
                 break;
+
             case "end":
-                running_transactions.remove(a.transactionid);
-                committed_transactions.add(a.transactionid);
+                running_transactions.remove(a.transac_id);
+                committed_transactions.add(a.transac_id);
                 //TODO: commit transaction at all sites that contain it
                 break;
 
@@ -126,13 +131,16 @@ public class TransactionManager {
                 //acquire write-lock for all sites containing the current variable
                 for(int siteindex : sitescontainingvar.get(a.variable)){
                     //check if a lock already exists
-                    if(Util.canAcquire(sites.get(siteindex).locktable.get(a.variable), "WRITE")){
-                        sites.get(siteindex).locktable.put(a.variable, new ArrayList<LockEntry>());
-                        sites.get(siteindex).locktable.get(a.variable).add(new LockEntry(a.transactionid, "WRITE"));
+                    if(Util.canAcquire(sites[siteindex - 1].locktable.get(a.variable), "WRITE")){
+                        sites[siteindex-1].locktable.put(a.variable, new ArrayList<LockEntry>());
+                        sites[siteindex-1].locktable.get(a.variable).add(new LockEntry(a.transac_id, "WRITE"));
                     }else{
-                        System.out.println("T" + a.transactionid + " CAN'T ACQUIRE WRITE LOCK FOR x" + a.variable + " AT SITE" + siteindex);
+                        System.out.println("T" + a.transac_id + " CAN'T ACQUIRE WRITE LOCK FOR x" + a.variable + " AT SITE" + siteindex);
+                        for(LockEntry le : sites[siteindex - 1].locktable.get(a.variable)){
+                            //fill list with 0s and create an edge between T' and T
+                            conflictgraph.get(a.transac_id -1).set(le.transac_id-1, 1);
+                        }
                     }
-
                 }
                 break;
 
@@ -140,11 +148,11 @@ public class TransactionManager {
                 //acquire read-lock for all sites containing the current variable
                 for(int siteindex : sitescontainingvar.get(a.variable)){
 
-                    if(Util.canAcquire(sites.get(siteindex).locktable.get(a.variable), "READ")) {
-                        sites.get(siteindex).locktable.put(a.variable, new ArrayList<LockEntry>());
-                        sites.get(siteindex).locktable.get(a.variable).add(new LockEntry(a.transactionid, "READ"));
+                    if(Util.canAcquire(sites[siteindex-1].locktable.get(a.variable), "READ")) {
+                        sites[siteindex-1].locktable.put(a.variable, new ArrayList<LockEntry>());
+                        sites[siteindex-1].locktable.get(a.variable).add(new LockEntry(a.transac_id, "READ"));
                     }else{
-                        System.out.println("T" + a.transactionid + " CAN'T ACQUIRE READ LOCK FOR x" + a.variable + " AT SITE" + siteindex);
+                        System.out.println("T" + a.transac_id + " CAN'T ACQUIRE READ LOCK FOR x" + a.variable + " AT SITE" + siteindex);
                     }
 
                 }
@@ -170,8 +178,8 @@ public class TransactionManager {
     //TODO: process a read action
     public static void processR(Action a){
         //search for a site that contains the variable
-        for(int site_i : sites.keySet()){
-            if(sites.get(site_i).variables.contains(a.variable)){
+        for(DBSite site : sites){
+            if(site.variables.contains(a.variable)){
                 System.out.println(a.toString() + " from site ");
             }
         }

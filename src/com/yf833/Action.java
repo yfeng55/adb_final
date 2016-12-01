@@ -3,7 +3,7 @@ package com.yf833;
 
 public class Action {
 
-    public int transactionid;
+    public int transac_id;
     public String type;
     public int time;
 
@@ -16,14 +16,14 @@ public class Action {
 
     //constructor for begin() and end() actions
     public Action(String type, int transactionid, int time){
-        this.transactionid = transactionid;
+        this.transac_id = transactionid;
         this.type = type;
         this.time = time;
     }
 
     //constructor for R() actions
     public Action(String type, int transactionid, int time, int variable){
-        this.transactionid = transactionid;
+        this.transac_id = transactionid;
         this.type = type;
         this.time = time;
         this.variable = variable;
@@ -31,7 +31,7 @@ public class Action {
 
     //constructor for W() actions
     public Action(String type, int transactionid, int time, int variable, int value){
-        this.transactionid = transactionid;
+        this.transac_id = transactionid;
         this.type = type;
         this.time = time;
         this.variable = variable;
@@ -41,7 +41,7 @@ public class Action {
 
     public String toString(){
         String output = "";
-        output += "T" + transactionid + " | " + type;
+        output += "T" + transac_id + " | " + type;
         return output;
     }
 

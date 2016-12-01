@@ -5,11 +5,11 @@ public class LockEntry {
 
     //read, write, none
     public String type;
-    public int transaction_id;
+    public int transac_id;
 
     public LockEntry(int transactionid, String type){
         this.type = type;
-        this.transaction_id = transactionid;
+        this.transac_id = transactionid;
     }
 
 

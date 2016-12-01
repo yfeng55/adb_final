@@ -1,7 +1,9 @@
 package com.yf833;
 
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class Util {
 
@@ -81,6 +83,14 @@ public class Util {
         return true;
     }
 
+
+    //fill an ArrayList with N zeroes
+    public static void fillwithNZeroes(ArrayList<Integer> arr, int n){
+        int numzeroes = n - arr.size();
+        for(int i=0; i<numzeroes; i++){
+            arr.add(0);
+        }
+    }
 
 
     //TODO: check for deadlocks by checking if there is a cycle in the transactions graph
