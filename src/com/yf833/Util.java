@@ -49,6 +49,40 @@ public class Util {
 
 
 
+    //check if a locktable entry is available (i.e. we can acquire a lock for that variable at that site)
+    public static boolean canAcquire(ArrayList<LockEntry> lock_entries, String requestedtype) throws Exception {
+
+        //check if lock_entries is null, if so, return true (no lock has ever been set)
+        if(lock_entries == null){
+            return true;
+        }
+
+        //this loop is guaranteed to return after one iteration but we only need to check the first entry since
+        //lock_entries with multiple locks will only be reads
+        for(LockEntry lock_entry : lock_entries){
+
+            if(requestedtype.equals("READ") && lock_entry.type.equals("READ")){
+                return true;
+            }
+            else if(requestedtype.equals("WRITE") && lock_entry.type.equals("READ")){
+                return false;
+            }
+            else if(lock_entry.type == null){
+                return true;
+            }
+            else if(lock_entry.type.equals("WRITE") && lock_entry.type != null){
+                return false;
+            }
+            else{
+                System.out.println("ERROR: did not find a matching case for canAcquire()");
+                throw new Exception();
+            }
+        }
+        return true;
+    }
+
+
+
     //TODO: check for deadlocks by checking if there is a cycle in the transactions graph
     public static boolean isDeadlocked(ArrayList<Action> currentactions){
         return true;

@@ -30,8 +30,8 @@ public class TransactionManager {
     public static HashSet<Integer> committed_transactions = new HashSet<>();
     public static HashSet<Integer> aborted_transactions = new HashSet<>();
 
-    // a queue of transactions that are waiting
-    public static Queue<Action> waiting;
+    // keep a graph of conflicts between transactions (adjacency matrix representation)
+    public static ArrayList<ArrayList<Integer>> conflictgraph = new ArrayList<>();
 
 
     public static void main(String[] args) throws Exception {
@@ -52,7 +52,7 @@ public class TransactionManager {
                 for(int site_i : sites.keySet()){
                     sites.get(site_i).variables.add(var_id);
                     sitescontainingvar.get(var_id).add(sites.get(site_i).id);
-                    sites.get(site_i).locktable.put(var_id, DBSite.Lock.NONE);
+                    sites.get(site_i).locktable.put(var_id, null);
                 }
             }
             //if odd variable, put in site (i%10+1)
@@ -114,6 +114,7 @@ public class TransactionManager {
             case "begin":
                 transactions.put(a.transactionid, time);
                 running_transactions.add(a.transactionid);
+                conflictgraph.add(new ArrayList<Integer>());
                 break;
             case "end":
                 running_transactions.remove(a.transactionid);
@@ -124,14 +125,28 @@ public class TransactionManager {
             case "W":
                 //acquire write-lock for all sites containing the current variable
                 for(int siteindex : sitescontainingvar.get(a.variable)){
-                    sites.get(siteindex).locktable.put(a.variable, DBSite.Lock.WRITE);
+                    //check if a lock already exists
+                    if(Util.canAcquire(sites.get(siteindex).locktable.get(a.variable), "WRITE")){
+                        sites.get(siteindex).locktable.put(a.variable, new ArrayList<LockEntry>());
+                        sites.get(siteindex).locktable.get(a.variable).add(new LockEntry(a.transactionid, "WRITE"));
+                    }else{
+                        System.out.println("T" + a.transactionid + " CAN'T ACQUIRE WRITE LOCK FOR x" + a.variable + " AT SITE" + siteindex);
+                    }
+
                 }
                 break;
 
             case "R":
                 //acquire read-lock for all sites containing the current variable
                 for(int siteindex : sitescontainingvar.get(a.variable)){
-                    sites.get(siteindex).locktable.put(a.variable, DBSite.Lock.READ);
+
+                    if(Util.canAcquire(sites.get(siteindex).locktable.get(a.variable), "READ")) {
+                        sites.get(siteindex).locktable.put(a.variable, new ArrayList<LockEntry>());
+                        sites.get(siteindex).locktable.get(a.variable).add(new LockEntry(a.transactionid, "READ"));
+                    }else{
+                        System.out.println("T" + a.transactionid + " CAN'T ACQUIRE READ LOCK FOR x" + a.variable + " AT SITE" + siteindex);
+                    }
+
                 }
                 break;
 
