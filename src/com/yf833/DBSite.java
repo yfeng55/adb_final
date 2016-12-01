@@ -15,12 +15,14 @@ public class DBSite {
     // the variables contained at this site
     public HashSet<Integer> variables;
 
-    // hashmaps containing the temp buffer and actual data values stored at this site (variable --> value)
-    public HashMap<Integer, Integer> datatowrite;
+    // pending write requests for this site (transaction_id --> W(x,val))
+    public HashMap<Integer, ArrayList<Action>> pendingwrites;
+
+    // the actual data values stored at this site (variable --> value)
     public HashMap<Integer, Integer> datatable;
 
 
-    // the locktable for this site
+    // the locktable for this site (variable --> {type: W, transac_id: i})
     public HashMap<Integer, ArrayList<LockEntry>> locktable;
 
 
@@ -32,18 +34,39 @@ public class DBSite {
         this.locktable = new HashMap<>();
         this.variables = new HashSet<>();
         this.isFailed = false;
-        datatowrite = new HashMap<>();
+        pendingwrites = new HashMap<>();
         datatable = new HashMap<>();
     }
 
 
     //TODO: commit the specified transaction
-    public void commit(int transactionid){
+    public void commit(int transac_id){
 
+        //if this site doesn't have any pending actions for this transaction, then exit (nothing to commit)
+        if(!this.pendingwrites.keySet().contains(transac_id)){
+            return;
+        }
+
+        //execute all pending writes for this transaction
+        for(Action write : this.pendingwrites.get(transac_id)){
+            this.datatable.put(write.variable, write.value);
+        }
+        this.pendingwrites.remove(transac_id);
+
+        //free all locks that the committed transaction holds
+        for(int var_id : locktable.keySet()){
+            for(LockEntry le : locktable.get(var_id)){
+
+                //if this lockentry belongs to the committed transaction, then remove it
+                if(le.transac_id == transac_id){
+                    locktable.get(var_id).remove(le);
+                }
+            }
+        }
     }
 
     //TODO: abort the specified transaction
-    public void abort(int transactionid){
+    public void abort(int transac_id){
 
     }
 

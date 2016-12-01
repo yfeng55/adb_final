@@ -33,7 +33,7 @@ public class TransactionManager {
     public static HashSet<Integer> committed_transactions = new HashSet<>();
     public static HashSet<Integer> aborted_transactions = new HashSet<>();
 
-    // keep a graph of conflicts between transactions (adjacency matrix representation)
+    // keep a graph of conflicts between transactions (adjacency maetrix representation)
     public static ArrayList<ArrayList<Integer>> conflictgraph = new ArrayList<>();
 
 
@@ -55,13 +55,14 @@ public class TransactionManager {
                 for(DBSite site : sites){
                     site.variables.add(var_id);
                     sitescontainingvar.get(var_id).add(site.id);
-                    site.locktable.put(var_id, null);
+                    site.locktable.put(var_id, new ArrayList<LockEntry>());
                 }
             }
             //if odd variable, put in site (i%10+1)
             else{
                 int oddvar_location = (var_id%10) + 1;
                 sites[oddvar_location-1].variables.add(var_id);
+                sites[oddvar_location-1].locktable.put(var_id, new ArrayList<LockEntry>());
                 sitescontainingvar.get(var_id).add(oddvar_location);
             }
         }
@@ -134,10 +135,10 @@ public class TransactionManager {
                 running_transactions.remove(a.transac_id);
                 committed_transactions.add(a.transac_id);
 
-                //TODO: commit transaction at all sites that contain it
-                //once a transaction is committed, free all locks that it holds and write all values that were uncomitted
-
-
+                //commit the current transaction -- (call commit at all sites -- some sites may not have any pending actions for this transaction)
+                for(DBSite s : sites){
+                    s.commit(a.transac_id);
+                }
                 break;
 
             case "W":
@@ -145,7 +146,6 @@ public class TransactionManager {
                 for(int siteindex : sitescontainingvar.get(a.variable)){
                     //check if we can acquire a write lock
                     if(Util.canAcquire(sites[siteindex - 1].locktable.get(a.variable), "WRITE")){
-                        sites[siteindex-1].locktable.put(a.variable, new ArrayList<LockEntry>());
                         sites[siteindex-1].locktable.get(a.variable).add(new LockEntry(a.transac_id, "WRITE"));
 
                         //remove action from blocked (if blocked)
@@ -153,11 +153,17 @@ public class TransactionManager {
                             blocked_actions.remove(a);
                         }
 
-                    }else{
+                        //write to temp data table at site containing the variable
+                        if(sites[siteindex-1].pendingwrites.get(a.transac_id) == null){
+                            sites[siteindex-1].pendingwrites.put(a.transac_id, new ArrayList<Action>());
+                        }
+                        sites[siteindex-1].pendingwrites.get(a.transac_id).add(a);
+
+                    } else {
                         System.out.println("T" + a.transac_id + " CAN'T ACQUIRE WRITE LOCK FOR x" + a.variable + " AT SITE" + siteindex);
 
                         //add action to waiting queue (if not already there)
-                        if(!blocked_actions.contains(a)){
+                        if(!blocked_actions.contains(a)) {
                             blocked_actions.add(a);
                         }
 
@@ -175,7 +181,6 @@ public class TransactionManager {
                 for(int siteindex : sitescontainingvar.get(a.variable)){
 
                     if(Util.canAcquire(sites[siteindex-1].locktable.get(a.variable), "READ")) {
-                        sites[siteindex-1].locktable.put(a.variable, new ArrayList<LockEntry>());
                         sites[siteindex-1].locktable.get(a.variable).add(new LockEntry(a.transac_id, "READ"));
                     }else{
                         System.out.println("T" + a.transac_id + " CAN'T ACQUIRE READ LOCK FOR x" + a.variable + " AT SITE" + siteindex);
