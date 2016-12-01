@@ -25,9 +25,6 @@ public class TransactionManager {
   // list of sites that a variable is present at
   public static HashMap<Integer, ArrayList<Integer>> sitescontainingvar = new HashMap<>();
 
-  // contains the set of all the variables which have changed from initial state
-  public static HashSet<Integer> changedVariables = new HashSet<>();
-
   // lookuptable of all transactions that are currently running and their actions
   public static HashMap<Integer, Integer> transaction_starttimes = new HashMap<>();
   public static HashSet<Integer> running_transactions = new HashSet<>();
@@ -145,7 +142,6 @@ public class TransactionManager {
       break;
 
     case "W" :
-      changedVariables.add(a.variable);
       // acquire write-lock for all sites containing the current variable
       for (int siteindex : sitescontainingvar.get(a.variable)) {
         // check if we can acquire a write lock
