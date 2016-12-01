@@ -23,11 +23,11 @@ public class TransactionManager {
     public static HashMap<Integer, ArrayList<Integer>> sitescontainingvar = new HashMap<>();
 
     // lookuptable of all transactions that are currently running and their actions
-    public static HashMap<Integer, Integer> transactions = new HashMap<>();
+    public static HashMap<Integer, Integer> transaction_starttimes = new HashMap<>();
     public static HashSet<Integer> running_transactions = new HashSet<>();
 
     // track actions that are blocked
-    public static LinkedList<Action> blocked_actions = new LinkedList<>();
+    public static ArrayList<Action> blocked_actions = new ArrayList<>();
 
     // track committed transactions and aborted transactions (store their ids in sets)
     public static HashSet<Integer> committed_transactions = new HashSet<>();
@@ -73,6 +73,11 @@ public class TransactionManager {
         int time=0;
         while(scan.hasNextLine()){
 
+            // before processing new actions, try to process blocked actions
+            for(Action a : blocked_actions){
+                processAction(a, time);
+            }
+
             //get the next line and hold all actions to perform at the current time in a list
             String nextline = scan.nextLine();
             ArrayList<Action> currentactions = new ArrayList<>();
@@ -110,11 +115,12 @@ public class TransactionManager {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
     //process a single begin(), end(), R(), or W() action
     public static void processAction(Action a, int time) throws Exception {
         switch(a.type){
             case "begin":
-                transactions.put(a.transac_id, time);
+                transaction_starttimes.put(a.transac_id, time);
                 running_transactions.add(a.transac_id);
                 conflictgraph.add(new ArrayList<Integer>());
 
@@ -142,11 +148,18 @@ public class TransactionManager {
                         sites[siteindex-1].locktable.put(a.variable, new ArrayList<LockEntry>());
                         sites[siteindex-1].locktable.get(a.variable).add(new LockEntry(a.transac_id, "WRITE"));
 
+                        //remove action from blocked (if blocked)
+                        if(blocked_actions.contains(a)){
+                            blocked_actions.remove(a);
+                        }
+
                     }else{
                         System.out.println("T" + a.transac_id + " CAN'T ACQUIRE WRITE LOCK FOR x" + a.variable + " AT SITE" + siteindex);
 
-                        //add action to waiting queue
-                        blocked_actions.add(a);
+                        //add action to waiting queue (if not already there)
+                        if(!blocked_actions.contains(a)){
+                            blocked_actions.add(a);
+                        }
 
                         //update conflict graph
                         for(LockEntry le : sites[siteindex - 1].locktable.get(a.variable)){
@@ -176,6 +189,8 @@ public class TransactionManager {
                 throw new Exception();
         }
     }
+
+
 
 
     //TODO: print the states of the TM and all DBSites
@@ -213,6 +228,15 @@ public class TransactionManager {
     }
 
 
+    //return true if a transaction is blocked (i.e. any of the actions in blocked_actions belong to this transaction)
+    public static boolean isBlocked(int transac_id){
+        for(Action a : blocked_actions){
+            if(a.transac_id == transac_id){
+                return true;
+            }
+        }
+        return false;
+    }
 
 
 }

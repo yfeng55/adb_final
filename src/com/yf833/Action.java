@@ -46,4 +46,20 @@ public class Action {
     }
 
 
+    //compare if two Actions are equal
+    @Override
+    public boolean equals(Object a2){
+        boolean is_same = false;
+        if (a2 != null && a2 instanceof Action){
+
+            Action action2 = (Action) a2;
+
+            is_same = (this.transac_id == action2.transac_id
+                    && this.time == action2.time
+                    && this.type.equals(action2.type));
+        }
+        return is_same;
+    }
+    
+
 }
