@@ -9,24 +9,31 @@ public class DBSite {
     // the id for this site
     public int id;
 
+    // track if the site is up or not
+    public boolean isFailed;
+
     // the variables contained at this site
     public HashSet<Integer> variables;
 
+    // hashmaps containing the temp buffer and actual data values stored at this site (variable --> value)
+    public HashMap<Integer, Integer> datatowrite;
+    public HashMap<Integer, Integer> datatable;
+
+
     // the locktable for this site
     public HashMap<Integer, ArrayList<LockEntry>> locktable;
-
-    // the queue of lock requests for this site
-    public Queue<LockEntry> waiting_lockrequests;
-
 
 
 
 
     public DBSite(int id){
         this.id = id;
+
         this.locktable = new HashMap<>();
         this.variables = new HashSet<>();
-        this.waiting_lockrequests = new LinkedList<>();
+        this.isFailed = false;
+        datatowrite = new HashMap<>();
+        datatable = new HashMap<>();
     }
 
 

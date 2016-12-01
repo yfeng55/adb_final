@@ -26,6 +26,9 @@ public class TransactionManager {
     public static HashMap<Integer, Integer> transactions = new HashMap<>();
     public static HashSet<Integer> running_transactions = new HashSet<>();
 
+    // track actions that are blocked
+    public static LinkedList<Action> blocked_actions = new LinkedList<>();
+
     // track committed transactions and aborted transactions (store their ids in sets)
     public static HashSet<Integer> committed_transactions = new HashSet<>();
     public static HashSet<Integer> aborted_transactions = new HashSet<>();
@@ -124,18 +127,28 @@ public class TransactionManager {
             case "end":
                 running_transactions.remove(a.transac_id);
                 committed_transactions.add(a.transac_id);
+
                 //TODO: commit transaction at all sites that contain it
+                //once a transaction is committed, free all locks that it holds and write all values that were uncomitted
+
+
                 break;
 
             case "W":
                 //acquire write-lock for all sites containing the current variable
                 for(int siteindex : sitescontainingvar.get(a.variable)){
-                    //check if a lock already exists
+                    //check if we can acquire a write lock
                     if(Util.canAcquire(sites[siteindex - 1].locktable.get(a.variable), "WRITE")){
                         sites[siteindex-1].locktable.put(a.variable, new ArrayList<LockEntry>());
                         sites[siteindex-1].locktable.get(a.variable).add(new LockEntry(a.transac_id, "WRITE"));
+
                     }else{
                         System.out.println("T" + a.transac_id + " CAN'T ACQUIRE WRITE LOCK FOR x" + a.variable + " AT SITE" + siteindex);
+
+                        //add action to waiting queue
+                        blocked_actions.add(a);
+
+                        //update conflict graph
                         for(LockEntry le : sites[siteindex - 1].locktable.get(a.variable)){
                             //fill list with 0s and create an edge between T' and T
                             conflictgraph.get(a.transac_id -1).set(le.transac_id-1, 1);
