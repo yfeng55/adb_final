@@ -120,16 +120,21 @@ public class TransactionManager {
                 committed_transactions.add(a.transactionid);
                 //TODO: commit transaction at all sites that contain it
                 break;
+
             case "W":
                 //acquire write-lock for all sites containing the current variable
                 for(int siteindex : sitescontainingvar.get(a.variable)){
-
+                    sites.get(siteindex).locktable.put(a.variable, DBSite.Lock.WRITE);
                 }
                 break;
+
             case "R":
-                //acquire read-lock
-                //read variable at a site that contains it
+                //acquire read-lock for all sites containing the current variable
+                for(int siteindex : sitescontainingvar.get(a.variable)){
+                    sites.get(siteindex).locktable.put(a.variable, DBSite.Lock.READ);
+                }
                 break;
+
             default:
                 System.out.println("ERROR: action contains an invalid type");
                 throw new Exception();
