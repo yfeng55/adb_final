@@ -25,7 +25,25 @@ public class ConflictGraph {
     //add edge from node1 --> node2
     //nodes are represented as transac_id-1
     public void addEdge(int node1, int node2){
-        this.adj_list.get(node1).add(node2);
+        if(!this.adj_list.contains(node2)){
+            this.adj_list.get(node1).add(node2);
+        }
+    }
+
+    //update the graph to reflect a committed transaction
+    public void commit(int transac_id){
+
+        transac_id = transac_id-1;
+
+        //clear the row for this transac_id
+        this.adj_list.get(transac_id).clear();
+
+        //remove all rows in the conflict graph that contain transac_id
+        for(ArrayList<Integer> row : adj_list){
+            if(row.contains(transac_id)){
+                row.remove(transac_id);
+            }
+        }
     }
 
 }

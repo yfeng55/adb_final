@@ -134,6 +134,8 @@ public class TransactionManager {
                 for(DBSite s : sites){
                     s.commit(a.transac_id);
                 }
+                //update the conflict graph
+                conflict_graph.commit(a.transac_id);
                 break;
 
             case "W":

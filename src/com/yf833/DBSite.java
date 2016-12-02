@@ -34,8 +34,8 @@ public class DBSite {
         this.locktable = new HashMap<>();
         this.variables = new HashSet<>();
         this.isFailed = false;
-        pendingwrites = new HashMap<>();
-        datatable = new HashMap<>();
+        this.pendingwrites = new HashMap<>();
+        this.datatable = new HashMap<>();
     }
 
 
@@ -54,12 +54,12 @@ public class DBSite {
         this.pendingwrites.remove(transac_id);
 
         //free all locks that the committed transaction holds
-        for(int var_id : locktable.keySet()){
-            for(LockEntry le : locktable.get(var_id)){
+        for(int var_id : this.locktable.keySet()){
+            for(LockEntry le : this.locktable.get(var_id)){
 
                 //if this lockentry belongs to the committed transaction, then remove it
                 if(le.transac_id == transac_id){
-                    locktable.get(var_id).remove(le);
+                    this.locktable.get(var_id).remove(le);
                 }
             }
         }

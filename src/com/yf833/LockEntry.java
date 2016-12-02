@@ -17,9 +17,9 @@ public class LockEntry {
     @Override
     public boolean equals(Object le2){
         boolean is_same = false;
-        if (le2 != null && le2 instanceof Action){
+        if (le2 != null && le2 instanceof LockEntry){
 
-            Action lockentry2 = (Action) le2;
+            LockEntry lockentry2 = (LockEntry) le2;
 
             is_same = (this.transac_id == lockentry2.transac_id
                     && this.type.equals(lockentry2.type));
