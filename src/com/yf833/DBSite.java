@@ -1,9 +1,10 @@
 package com.yf833;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 
-import java.util.*;
-
-//each site represents a separate database -- it has its own lock table and variable copies
+// each site represents a separate database -- it has its own lock table and variable copies
 public class DBSite {
 
     // the id for this site
@@ -21,23 +22,21 @@ public class DBSite {
     // the actual data values stored at this site (variable --> value)
     public HashMap<Integer, Integer> datatable;
 
-
     // the locktable for this site (variable --> {type: W, transac_id: i})
     public HashMap<Integer, ArrayList<LockEntry>> locktable;
 
+    boolean hasRecovered;
 
-
-
-    public DBSite(int id){
+    public DBSite(int id) {
         this.id = id;
 
         this.locktable = new HashMap<>();
         this.variables = new HashSet<>();
         this.isFailed = false;
-        this.pendingwrites = new HashMap<>();
-        this.datatable = new HashMap<>();
+        pendingwrites = new HashMap<>();
+        datatable = new HashMap<>();
+        hasRecovered = false;
     }
-
 
     // commit the specified transaction
     public void commit(int transac_id){
@@ -70,11 +69,16 @@ public class DBSite {
         }
     }
 
-    //TODO: abort the specified transaction
-    public void abort(int transac_id){
+    // TODO: abort the specified transaction
+    public void abort(int transac_id) {
 
     }
 
-
+    public void failure() {
+        isFailed = true;
+        pendingwrites.clear();
+        locktable.clear();
+        datatable.clear();
+    }
 
 }

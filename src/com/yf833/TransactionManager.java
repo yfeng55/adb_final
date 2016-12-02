@@ -133,6 +133,14 @@ public class TransactionManager {
                 conflict_graph.addTransac(a.transac_id);
                 break;
 
+            case "beginRO" :
+                HashMap<Integer, Integer> tempdata = new HashMap<>();
+                for (DBSite d : sites) {
+                    for (Integer i : d.datatable.keySet())
+                          tempdata.put(i, d.datatable.get(i));
+                  }
+                break;
+
             case "end":
                 running_transactions.remove(a.transac_id);
                 committed_transactions.add(a.transac_id);
@@ -202,9 +210,13 @@ public class TransactionManager {
 
 
 
-    //TODO: print the states of the TM and all DBSites
+    //print the states of the TM and all DBSites
     public static void querystate(){
-
+        System.out.println("Committed Transactions:" + committed_transactions);
+        System.out.println("Running Transactions " + running_transactions);
+        System.out.println("Aborted Transactions " + aborted_transactions);
+        System.out.println("State of all the sites: ");
+        dump();
     }
 
     //TODO: process a write action
