@@ -1,5 +1,6 @@
 package com.yf833;
 
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.io.File;
 import java.util.*;
 
@@ -22,17 +23,16 @@ public class TransactionManager {
     // list of sites that a variable is present at
     public static HashMap<Integer, ArrayList<Integer>> sitescontainingvar = new HashMap<>();
 
-    // lookuptable of all transactions that are currently running and their actions
-    public static HashMap<Integer, Integer> transaction_starttimes = new HashMap<>();
-    public static HashSet<Integer> running_transactions = new HashSet<>();
+    //maintain a list of transaction objects to track: isCommitted, isAborted, isRunning, startTime
+    //transac_id --> Trasnaction
+    public static ArrayList<Transaction> transactions = new ArrayList<>();
+
 
     // track actions that are blocked
     public static ArrayList<Action> blocked_actions = new ArrayList<>();
     public static ArrayList<Action> newblocked_actions = new ArrayList<>();
 
-    // track committed transactions and aborted transactions (store their ids in sets)
-    public static HashSet<Integer> committed_transactions = new HashSet<>();
-    public static HashSet<Integer> aborted_transactions = new HashSet<>();
+
 
     // keep a graph of conflicts between transactions (adjacency maetrix representation)
     public static ConflictGraph conflict_graph = new ConflictGraph();
@@ -57,6 +57,7 @@ public class TransactionManager {
                     site.variables.add(var_id);
                     sitescontainingvar.get(var_id).add(site.id);
                     site.locktable.put(var_id, new ArrayList<LockEntry>());
+                    site.datatable.put(var_id, var_id*10);
                 }
             }
             //if odd variable, put in site (i%10+1)
@@ -64,6 +65,7 @@ public class TransactionManager {
                 int oddvar_location = (var_id%10) + 1;
                 sites[oddvar_location-1].variables.add(var_id);
                 sites[oddvar_location-1].locktable.put(var_id, new ArrayList<LockEntry>());
+                sites[oddvar_location-1].datatable.put(var_id, var_id*10);
                 sitescontainingvar.get(var_id).add(oddvar_location);
             }
         }
@@ -110,6 +112,11 @@ public class TransactionManager {
 
             //increment time after processing each line
             time++;
+
+            if(time == 5){
+                querystate();
+            }
+
         }
 
 
@@ -128,8 +135,9 @@ public class TransactionManager {
 
         switch(a.type){
             case "begin":
-                transaction_starttimes.put(a.transac_id, time);
-                running_transactions.add(a.transac_id);
+
+                //create a new transaction
+                transactions.add(new Transaction(a.transac_id, time, Transaction.Type.DEFAULT));
                 conflict_graph.addTransac(a.transac_id);
                 break;
 
@@ -142,8 +150,11 @@ public class TransactionManager {
                 break;
 
             case "end":
-                running_transactions.remove(a.transac_id);
-                committed_transactions.add(a.transac_id);
+                for(Transaction t : transactions){
+                    if(t.transactionID == a.transac_id){
+                        t.status = Transaction.Status.COMMITED;
+                    }
+                }
 
                 //commit the current transaction -- (call commit at all sites -- some sites may not have any pending actions for this transaction)
                 for(DBSite s : sites){
@@ -177,6 +188,11 @@ public class TransactionManager {
                         //add action to waiting queue (if not already there)
                         if(!blocked_actions.contains(a)) {
                             newblocked_actions.add(a);
+                            for(Transaction t : transactions){
+                                if(t.transactionID == a.transac_id){
+                                    t.status = Transaction.Status.WAITING;
+                                }
+                            }
                         }
 
                         //update conflict graph
@@ -212,9 +228,9 @@ public class TransactionManager {
 
     //print the states of the TM and all DBSites
     public static void querystate(){
-        System.out.println("Committed Transactions:" + committed_transactions);
-        System.out.println("Running Transactions " + running_transactions);
-        System.out.println("Aborted Transactions " + aborted_transactions);
+        for(Transaction t : transactions){
+            System.out.println(t.toString());
+        }
         System.out.println("State of all the sites: ");
         dump();
     }
