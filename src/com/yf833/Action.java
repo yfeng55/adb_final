@@ -4,7 +4,7 @@ package com.yf833;
 public class Action {
 
     public int transac_id;
-    public String type;
+    public String type; //read, write, end, begin, ...
     public int time;
 
     //only for R() and W() actions

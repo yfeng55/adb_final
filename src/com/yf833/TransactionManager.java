@@ -113,9 +113,9 @@ public class TransactionManager {
             //increment time after processing each line
             time++;
 
-            if(time == 5){
-                querystate();
-            }
+//            if(time == 5){
+//                querystate();
+//            }
 
         }
 
@@ -129,9 +129,6 @@ public class TransactionManager {
 
     //process a single begin(), end(), R(), or W() action
     public static void processAction(Action a, int time) throws Exception {
-
-        //check for deadlock
-        HashSet<Integer> cycle = conflict_graph.getCycle();
 
         switch(a.type){
             case "begin":
@@ -161,7 +158,7 @@ public class TransactionManager {
                     s.commit(a.transac_id);
                 }
                 //update the conflict graph
-                conflict_graph.commit(a.transac_id);
+                conflict_graph.commit_or_abort(a.transac_id);
                 break;
 
             case "W":
@@ -221,9 +218,67 @@ public class TransactionManager {
                 System.out.println("ERROR: action contains an invalid type");
                 throw new Exception();
         }
+
+        //check for deadlock
+        HashSet<Integer> cycle = conflict_graph.getCycle();
+        if(cycle.size()>0){
+            abortYoungestInCycle(cycle);
+            System.out.println();
+        }
+
     }
 
 
+
+    public static void abortYoungestInCycle(HashSet<Integer> cycle) throws Exception {
+
+        // take the set of transactions that are involved in the abortYoungestInCycle
+        // get references to those transactions from the set of cycle IDs
+        ArrayList<Transaction> abort_candidates = new ArrayList<>();
+        for(Transaction t : transactions){
+            //if a transaction is contained in the cycle, add it to abort candidates
+            // (we subtract 1 from the transaction id since the graph's indices are transac_id -1)
+            if(cycle.contains(t.transactionID-1)){
+                abort_candidates.add(t);
+            }
+        }
+
+        if(abort_candidates.size() == 0){
+            System.out.println("ERROR: expected non empty abort_candidates list");
+            throw new Exception();
+        }
+
+        //find the youngest of the abort candidates
+        Transaction youngest_t = abort_candidates.get(0);
+        for(Transaction t : abort_candidates){
+            if(t.startTime > youngest_t.startTime){
+                youngest_t = t;
+            }
+        }
+
+        //remove this transaction's actions from the blocked list
+        newblocked_actions = new ArrayList<>();
+        for(Action a : blocked_actions){
+            if(a.transac_id != youngest_t.transactionID){
+                newblocked_actions.add(a);
+            }
+        }
+        blocked_actions = newblocked_actions;
+
+
+        System.out.println("--> aborting transaction T" + youngest_t.transactionID);
+
+        youngest_t.status = Transaction.Status.ABORTED;
+
+        // call the abort() function at all DBSites (clears the locktable of this transaction's locks, clear pending writes for this transaction)
+        for(DBSite s : sites){
+            s.abort(youngest_t.transactionID);
+        }
+
+        //update conflict graph to reflect the abort
+        conflict_graph.commit_or_abort(youngest_t.transactionID);
+
+    }
 
 
     //print the states of the TM and all DBSites

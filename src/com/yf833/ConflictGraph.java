@@ -136,10 +136,8 @@ public class ConflictGraph {
     }
 
 
-
-
     //update the graph to reflect a committed transaction
-    public void commit(int transac_id){
+    public void commit_or_abort(int transac_id){
 
         transac_id = transac_id-1;
 
@@ -147,11 +145,17 @@ public class ConflictGraph {
         this.adj_list.get(transac_id).clear();
 
         //remove all rows in the conflict graph that contain transac_id
-        for(ArrayList<Integer> row : adj_list){
-            if(row.contains(transac_id)){
-                row.remove(transac_id);
+        for(ArrayList<Integer> row : this.adj_list){
+            if(row.contains((Integer) transac_id)){
+                row.remove((Integer) transac_id);
+                break;
             }
         }
+
+
     }
+
+
+
 
 }

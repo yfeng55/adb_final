@@ -16,7 +16,7 @@ public class DBSite {
     // the variables contained at this site
     public HashSet<Integer> variables;
 
-    // pending write requests for this site (transaction_id --> W(x,val))
+    // pending write requests for this site (transaction_id --> [W(x1,val), W(x2,val), ...])
     public HashMap<Integer, ArrayList<Action>> pendingwrites;
 
     // the actual data values stored at this site (variable --> value)
@@ -52,27 +52,43 @@ public class DBSite {
         }
         this.pendingwrites.remove(transac_id);
 
-        //free all locks that the committed transaction holds
-        for(int var_id : this.locktable.keySet()){
+        removeAllLocksForTransaction(transac_id);
 
+    }
+
+
+    // TODO: abort the specified transaction
+    public void abort(int transac_id) {
+        // clear the transaction's pending writes at this site
+
+        //if site s contains pending for this transaction, remove that transaction's row from the pending writes table
+        if(this.pendingwrites.keySet().contains(transac_id)){
+            this.pendingwrites.remove(transac_id);
+        }
+
+        removeAllLocksForTransaction(transac_id);
+
+    }
+
+
+    // free all locks for this transaction
+    private void removeAllLocksForTransaction(int transac_id){
+        for(int var_id : this.locktable.keySet()) {
             ArrayList<LockEntry> new_lelist = new ArrayList<>();
-
             //find the indexes to remove
-            for(LockEntry le : this.locktable.get(var_id)){
+            for (LockEntry le : this.locktable.get(var_id)) {
                 //if this lockentry belongs to the committed transaction, then remove it
-                if(le.transac_id != transac_id){
+                if (le.transac_id != transac_id) {
                     new_lelist.add(le);
                 }
             }
-
             this.locktable.put(var_id, new_lelist);
         }
     }
 
-    // TODO: abort the specified transaction
-    public void abort(int transac_id) {
 
-    }
+
+
 
     public void failure() {
         isFailed = true;
