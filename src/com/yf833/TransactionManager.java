@@ -34,7 +34,7 @@ public class TransactionManager {
     public static HashSet<Integer> aborted_transactions = new HashSet<>();
 
     // keep a graph of conflicts between transactions (adjacency maetrix representation)
-    public static ArrayList<ArrayList<Integer>> conflictgraph = new ArrayList<>();
+    public static ConflictGraph conflict_graph = new ConflictGraph();
 
 
     public static void main(String[] args) throws Exception {
@@ -123,12 +123,7 @@ public class TransactionManager {
             case "begin":
                 transaction_starttimes.put(a.transac_id, time);
                 running_transactions.add(a.transac_id);
-                conflictgraph.add(new ArrayList<Integer>());
-
-                //fill conflictgraph with 0s
-                for(ArrayList<Integer> row : conflictgraph){
-                    Util.fillwithNZeroes(row, conflictgraph.size());
-                }
+                conflict_graph.addTransac(a.transac_id);
                 break;
 
             case "end":
@@ -170,7 +165,7 @@ public class TransactionManager {
                         //update conflict graph
                         for(LockEntry le : sites[siteindex - 1].locktable.get(a.variable)){
                             //fill list with 0s and create an edge between T' and T
-                            conflictgraph.get(a.transac_id -1).set(le.transac_id-1, 1);
+                            conflict_graph.addEdge(a.transac_id-1, le.transac_id-1);
                         }
                     }
                 }
