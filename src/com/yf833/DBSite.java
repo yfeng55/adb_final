@@ -55,13 +55,18 @@ public class DBSite {
 
         //free all locks that the committed transaction holds
         for(int var_id : this.locktable.keySet()){
-            for(LockEntry le : this.locktable.get(var_id)){
 
+            ArrayList<LockEntry> new_lelist = new ArrayList<>();
+
+            //find the indexes to remove
+            for(LockEntry le : this.locktable.get(var_id)){
                 //if this lockentry belongs to the committed transaction, then remove it
-                if(le.transac_id == transac_id){
-                    this.locktable.get(var_id).remove(le);
+                if(le.transac_id != transac_id){
+                    new_lelist.add(le);
                 }
             }
+
+            this.locktable.put(var_id, new_lelist);
         }
     }
 

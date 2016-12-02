@@ -28,6 +28,7 @@ public class TransactionManager {
 
     // track actions that are blocked
     public static ArrayList<Action> blocked_actions = new ArrayList<>();
+    public static ArrayList<Action> newblocked_actions = new ArrayList<>();
 
     // track committed transactions and aborted transactions (store their ids in sets)
     public static HashSet<Integer> committed_transactions = new HashSet<>();
@@ -75,9 +76,11 @@ public class TransactionManager {
         while(scan.hasNextLine()){
 
             // before processing new actions, try to process blocked actions
+            newblocked_actions = new ArrayList<>(blocked_actions);
             for(Action a : blocked_actions){
                 processAction(a, time);
             }
+            blocked_actions = newblocked_actions;
 
             //get the next line and hold all actions to perform at the current time in a list
             String nextline = scan.nextLine();
@@ -147,7 +150,7 @@ public class TransactionManager {
 
                         //remove action from blocked (if blocked)
                         if(blocked_actions.contains(a)){
-                            blocked_actions.remove(a);
+                            newblocked_actions.remove(a);
                         }
 
                         //write to temp data table at site containing the variable
@@ -161,7 +164,7 @@ public class TransactionManager {
 
                         //add action to waiting queue (if not already there)
                         if(!blocked_actions.contains(a)) {
-                            blocked_actions.add(a);
+                            newblocked_actions.add(a);
                         }
 
                         //update conflict graph
