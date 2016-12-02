@@ -32,6 +32,9 @@ public class TransactionManager {
   // track actions that are blocked
   public static ArrayList<Action> blocked_actions = new ArrayList<>();
 
+  // add a snapshot of data for readonly transactions
+  public static HashMap<Integer, HashMap<Integer, Integer>> readOnlyData = new HashMap<>();
+
   // track committed transactions and aborted transactions (store their ids in sets)
   public static HashSet<Integer> committed_transactions = new HashSet<>();
   public static HashSet<Integer> aborted_transactions = new HashSet<>();
@@ -130,6 +133,15 @@ public class TransactionManager {
       }
       break;
 
+    case "beginRO" :
+      HashMap<Integer, Integer> tempdata = new HashMap<>();
+      for (DBSite d : sites) {
+        for (Integer i : d.datatable.keySet())
+          tempdata.put(i, d.datatable.get(i));
+      }
+      readOnlyData.put(a.transac_id, tempdata);
+      break;
+
     case "end" :
       running_transactions.remove(a.transac_id);
       committed_transactions.add(a.transac_id);
@@ -195,11 +207,16 @@ public class TransactionManager {
       System.out.println("ERROR: action contains an invalid type");
       throw new Exception();
     }
+
   }
 
   // TODO: print the states of the TM and all DBSites
   public static void querystate() {
-
+    System.out.println("Committed Transactions:" + committed_transactions);
+    System.out.println("Running Transactions " + running_transactions);
+    System.out.println("Aborted Transactions " + aborted_transactions);
+    System.out.println("State of all the sites: ");
+    dump();
   }
 
   // TODO: process a write action
