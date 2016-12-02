@@ -39,7 +39,7 @@ public class DBSite {
     }
 
 
-    //TODO: commit the specified transaction
+    // commit the specified transaction
     public void commit(int transac_id){
 
         //if this site doesn't have any pending actions for this transaction, then exit (nothing to commit)

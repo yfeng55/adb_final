@@ -122,6 +122,10 @@ public class TransactionManager {
 
     //process a single begin(), end(), R(), or W() action
     public static void processAction(Action a, int time) throws Exception {
+
+        //check for deadlock
+        HashSet<Integer> cycle = conflict_graph.getCycle();
+
         switch(a.type){
             case "begin":
                 transaction_starttimes.put(a.transac_id, time);
