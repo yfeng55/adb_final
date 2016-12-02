@@ -101,6 +101,7 @@ public class TransactionManager {
 
                 //initialize a list of actions for the current time
                 for(String s : actions_arr){
+                    System.out.println("parsing... " + s);
                     currentactions.add(Util.strToAction(s.trim(), time));
                 }
 
@@ -212,6 +213,10 @@ public class TransactionManager {
                     }
 
                 }
+                break;
+
+            case "dump":
+                dump();
                 break;
 
             default:

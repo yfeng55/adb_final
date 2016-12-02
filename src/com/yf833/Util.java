@@ -23,7 +23,13 @@ public class Util {
         //create a begin() or end() action
         if(inputargsarr.length == 1){
             transactionid = inputargsarr[0].replaceAll("\\D+","").trim();
-            newaction = new Action(actiontype, Integer.parseInt(transactionid), time);
+
+            //dump() case
+            if(transactionid.equals("")){
+                newaction = new Action(actiontype);
+            }else{
+                newaction = new Action(actiontype, Integer.parseInt(transactionid), time);
+            }
         }
         //create a R() action
         else if(inputargsarr.length == 2){

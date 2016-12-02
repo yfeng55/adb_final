@@ -13,6 +13,10 @@ public class Action {
     //only for W() actions
     public int value;
 
+    //constructor for dump() action
+    public Action(String type){
+        this.type = type;
+    }
 
     //constructor for begin() and end() actions
     public Action(String type, int transactionid, int time){
