@@ -216,15 +216,29 @@ public class TransactionManager {
 
     //dump the committed values of all copies of all variables at all sites, sorted by site
     public static void dump(){
-
+        System.out.println("~Dumping all~");
+        for (DBSite site : sites) {
+            dump(site);
+        }
     }
 
-    public static void dump(DBSite i){
-
+    public static void dump(DBSite i) {
+        System.out.print("Dump For Site" + i.id + " : ");
+        ArrayList<Integer> vars = new ArrayList<Integer>(i.datatable.keySet());
+        Collections.sort(vars);
+        for (Integer j : vars) {
+            System.out.print("x" + j + ": " + i.datatable.get(j) + ", ");
+        }
+        System.out.println();
     }
 
-    public static void dump(int i){
-
+    public static void dump(int i) {
+        ArrayList<Integer> Sites = sitescontainingvar.get(i);
+        System.out.println("Variable x" + i + "at => ");
+        for (int j : Sites) {
+            System.out.print("Site " + sites[j].id + " : " + sites[j].datatable.get(i));
+        }
+        System.out.println();
     }
 
 
