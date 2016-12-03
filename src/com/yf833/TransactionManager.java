@@ -1,6 +1,5 @@
 package com.yf833;
 
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.io.File;
 import java.util.*;
 
@@ -114,13 +113,13 @@ public class TransactionManager {
             //increment time after processing each line
             time++;
 
-            if(time == 7){
-                querystate();
-            }
-
+//            if(time == 7){
+//                querystate();
+//            }
         }
 
         dump();
+        querystate();
         System.out.println();
     }
 
@@ -175,13 +174,13 @@ public class TransactionManager {
                         }
 
                         //write to temp data table at site containing the variable
-                        if(sites[siteindex-1].pendingwrites.get(a.transac_id) == null){
-                            sites[siteindex-1].pendingwrites.put(a.transac_id, new ArrayList<Action>());
+                        if(sites[siteindex-1].pendingactions.get(a.transac_id) == null){
+                            sites[siteindex-1].pendingactions.put(a.transac_id, new ArrayList<Action>());
                         }
-                        sites[siteindex-1].pendingwrites.get(a.transac_id).add(a);
+                        sites[siteindex-1].pendingactions.get(a.transac_id).add(a);
 
                     } else {
-                        System.out.println("T" + a.transac_id + " CAN'T ACQUIRE WRITE LOCK FOR x" + a.variable + " AT SITE" + siteindex);
+                        //System.out.println("T" + a.transac_id + " CAN'T ACQUIRE WRITE LOCK FOR x" + a.variable + " AT SITE" + siteindex);
 
                         //add action to waiting queue (if not already there)
                         if(!blocked_actions.contains(a)) {
@@ -210,8 +209,39 @@ public class TransactionManager {
 
                     if(Util.canAcquire(sites[siteindex-1].locktable.get(a.variable), "READ", a.transac_id)) {
                         sites[siteindex-1].locktable.get(a.variable).add(new LockEntry(a.transac_id, "READ"));
+
+                        //remove action from blocked (if blocked)
+                        if(blocked_actions.contains(a)){
+                            newblocked_actions.remove(a);
+                        }
+
+                        //put into pending actions queue
+                        if(sites[siteindex-1].pendingactions.get(a.transac_id) == null){
+                            sites[siteindex-1].pendingactions.put(a.transac_id, new ArrayList<Action>());
+                        }
+                        sites[siteindex-1].pendingactions.get(a.transac_id).add(a);
+
                     }else{
-                        System.out.println("T" + a.transac_id + " CAN'T ACQUIRE READ LOCK FOR x" + a.variable + " AT SITE" + siteindex);
+                        //System.out.println("T" + a.transac_id + " CAN'T ACQUIRE READ LOCK FOR x" + a.variable + " AT SITE" + siteindex);
+
+                        //add action to waiting queue (if not already there)
+                        if(!blocked_actions.contains(a)) {
+                            newblocked_actions.add(a);
+                            for(Transaction t : transactions){
+                                if(t.transactionID == a.transac_id){
+                                    t.status = Transaction.Status.WAITING;
+                                }
+                            }
+                        }
+
+                        //update conflict graph
+                        for(LockEntry le : sites[siteindex - 1].locktable.get(a.variable)){
+                            //fill list with 0s and create an edge between T' and T
+                            if(a.transac_id != le.transac_id){
+                                conflict_graph.addEdge(a.transac_id-1, le.transac_id-1);
+                            }
+                        }
+
                     }
 
                 }

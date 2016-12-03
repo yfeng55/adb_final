@@ -17,7 +17,7 @@ public class DBSite {
     public HashSet<Integer> variables;
 
     // pending write requests for this site (transaction_id --> [W(x1,val), W(x2,val), ...])
-    public HashMap<Integer, ArrayList<Action>> pendingwrites;
+    public HashMap<Integer, ArrayList<Action>> pendingactions;
 
     // the actual data values stored at this site (variable --> value)
     public HashMap<Integer, Integer> datatable;
@@ -33,38 +33,49 @@ public class DBSite {
         this.locktable = new HashMap<>();
         this.variables = new HashSet<>();
         this.isFailed = false;
-        pendingwrites = new HashMap<>();
+        pendingactions = new HashMap<>();
+
+        // var_id --> value
         datatable = new HashMap<>();
         hasRecovered = false;
     }
 
     // commit the specified transaction
-    public void commit(int transac_id){
+    public void commit(int transac_id) throws Exception {
 
         removeAllLocksForTransaction(transac_id);
 
-
         //if this site doesn't have any pending actions for this transaction, then exit (nothing to commit)
-        if(!this.pendingwrites.keySet().contains(transac_id)){
+        if(!this.pendingactions.keySet().contains(transac_id)){
             return;
         }
 
-        //execute all pending writes for this transaction
-        for(Action write : this.pendingwrites.get(transac_id)){
-            this.datatable.put(write.variable, write.value);
+        //execute all pending actions for this transaction
+        for(Action a : this.pendingactions.get(transac_id)){
+
+            if(a.type.equalsIgnoreCase("W")){
+                this.datatable.put(a.variable, a.value);
+            }
+            else if(a.type.equalsIgnoreCase("R")){
+                System.out.println("\nREAD: T" + a.transac_id + " reads x" + a.variable + "=" + this.datatable.get(a.variable));
+            }
+            else{
+                System.out.println("ERROR: Invalid action type in the pendingactions queue");
+                throw new Exception();
+            }
         }
-        this.pendingwrites.remove(transac_id);
+        this.pendingactions.remove(transac_id);
 
     }
 
 
-    // TODO: abort the specified transaction
+    // abort the specified transaction
     public void abort(int transac_id) {
         // clear the transaction's pending writes at this site
 
         //if site s contains pending for this transaction, remove that transaction's row from the pending writes table
-        if(this.pendingwrites.keySet().contains(transac_id)){
-            this.pendingwrites.remove(transac_id);
+        if(this.pendingactions.keySet().contains(transac_id)){
+            this.pendingactions.remove(transac_id);
         }
 
         removeAllLocksForTransaction(transac_id);
@@ -93,7 +104,7 @@ public class DBSite {
 
     public void failure() {
         isFailed = true;
-        pendingwrites.clear();
+        pendingactions.clear();
         locktable.clear();
         datatable.clear();
     }
