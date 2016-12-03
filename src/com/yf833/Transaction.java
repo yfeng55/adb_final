@@ -13,13 +13,13 @@ public class Transaction {
         DEFAULT, READONLY
     }
 
-    int transactionID;
-    int startTime;
-    Type type;
-    Status status;
+    public int transactionID;
+    public int startTime;
+    public Type type;
+    public Status status;
 
-    // a map to snapshot all the variables before the readonly transaction begin.
-    HashMap<Integer, Integer> readOnlyMap;
+    // for read-only transactions only -- a copy of the datatable
+    HashMap<Integer, Integer> data_table_from_lastcommit = null;
 
 
     public Transaction(int transac_id, int createtime, Type transac_type){
@@ -30,6 +30,10 @@ public class Transaction {
 
         //initialize status to running
         this.status = Status.RUNNING;
+
+        if(transac_type == Type.READONLY){
+            data_table_from_lastcommit = new HashMap<Integer, Integer>();
+        }
     }
 
 

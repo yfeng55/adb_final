@@ -132,17 +132,27 @@ public class TransactionManager {
 
         switch(a.type){
             case "begin":
-
                 //create a new transaction
                 transactions.add(new Transaction(a.transac_id, time, Transaction.Type.DEFAULT));
                 conflict_graph.addTransac(a.transac_id);
                 break;
 
             case "beginRO" :
-                HashMap<Integer, Integer> tempdata = new HashMap<>();
+
+                //create a new transaction
+                transactions.add(new Transaction(a.transac_id, time, Transaction.Type.READONLY));
+                conflict_graph.addTransac(a.transac_id);
+
                 for (DBSite d : sites) {
-                    for (Integer i : d.datatable.keySet())
-                          tempdata.put(i, d.datatable.get(i));
+                    for (Integer i : d.datatable.keySet()){
+
+                        for(Transaction t : transactions){
+                            if(t.transactionID == a.transac_id && t.type == Transaction.Type.READONLY){
+                                t.data_table_from_lastcommit.put(i, d.datatable.get(i));
+                            }
+                        }
+
+                    }
                   }
                 break;
 
@@ -157,6 +167,7 @@ public class TransactionManager {
                 for(DBSite s : sites){
                     s.commit(a.transac_id);
                 }
+
                 //update the conflict graph
                 conflict_graph.commit_or_abort(a.transac_id);
                 break;
@@ -204,6 +215,17 @@ public class TransactionManager {
                 break;
 
             case "R":
+
+                //CASE 1: READONLY transactions
+                for(Transaction t : transactions){
+                    if(t.transactionID == a.transac_id && t.type == Transaction.Type.READONLY){
+                        System.out.println("\nREAD: T" + a.transac_id + " reads x" + a.variable + "=" + t.data_table_from_lastcommit.get(a.variable));
+                        break;
+                    }
+                }
+
+
+                //CASE 2: DEFAULT transactions
                 //acquire read-lock for all sites containing the current variable
                 for(int siteindex : sitescontainingvar.get(a.variable)){
 
