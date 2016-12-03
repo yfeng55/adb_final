@@ -164,8 +164,15 @@ public class TransactionManager {
                 }
 
                 //commit the current transaction -- (call commit at all sites -- some sites may not have any pending actions for this transaction)
+                Transaction current_t = null;
+                for(Transaction t : transactions){
+                    if(t.transactionID == a.transac_id){
+                        current_t = t;
+                    }
+                }
+
                 for(DBSite s : sites){
-                    s.commit(a.transac_id);
+                    s.commit(a.transac_id, current_t.type);
                 }
 
                 //update the conflict graph

@@ -41,7 +41,7 @@ public class DBSite {
     }
 
     // commit the specified transaction
-    public void commit(int transac_id) throws Exception {
+    public void commit(int transac_id, Transaction.Type transac_type) throws Exception {
 
         removeAllLocksForTransaction(transac_id);
 
@@ -56,8 +56,11 @@ public class DBSite {
             if(a.type.equalsIgnoreCase("W")){
                 this.datatable.put(a.variable, a.value);
             }
-            else if(a.type.equalsIgnoreCase("R")){
+            else if(a.type.equalsIgnoreCase("R") && transac_type == Transaction.Type.DEFAULT){
                 System.out.println("\nREAD: T" + a.transac_id + " reads x" + a.variable + "=" + this.datatable.get(a.variable));
+            }
+            else if(a.type.equalsIgnoreCase("R") && transac_type == Transaction.Type.READONLY){
+                //do nothing
             }
             else{
                 System.out.println("ERROR: Invalid action type in the pendingactions queue");
