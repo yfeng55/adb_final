@@ -41,6 +41,9 @@ public class DBSite {
     // commit the specified transaction
     public void commit(int transac_id){
 
+        removeAllLocksForTransaction(transac_id);
+
+
         //if this site doesn't have any pending actions for this transaction, then exit (nothing to commit)
         if(!this.pendingwrites.keySet().contains(transac_id)){
             return;
@@ -51,8 +54,6 @@ public class DBSite {
             this.datatable.put(write.variable, write.value);
         }
         this.pendingwrites.remove(transac_id);
-
-        removeAllLocksForTransaction(transac_id);
 
     }
 

@@ -55,11 +55,19 @@ public class Util {
 
 
     //check if a locktable entry is available (i.e. we can acquire a lock for that variable at that site)
-    public static boolean canAcquire(ArrayList<LockEntry> lock_entries, String requestedtype) throws Exception {
+    public static boolean canAcquire(ArrayList<LockEntry> lock_entries, String requestedtype, int transac_id) throws Exception {
 
         //check if lock_entries is null, if so, return true (no lock has ever been set)
         if(lock_entries == null){
             return true;
+        }
+
+        //if there is only one Read lock in the list, and it has the same transac_id as the requested lock
+        //in this case, upgrade the read lock to a write lock (overwrite it)
+        if(lock_entries.size() == 1){
+            if(lock_entries.get(0).transac_id == transac_id){
+                return true;
+            }
         }
 
         //this loop is guaranteed to return after one iteration but we only need to check the first entry since
@@ -69,7 +77,7 @@ public class Util {
             if(requestedtype.equals("READ") && lock_entry.type.equals("READ")){
                 return true;
             }
-            else if(requestedtype.equals("WRITE") && lock_entry.type.equals("READ")){
+            else if(requestedtype.equals("WRITE") && lock_entry.type.equals("READ") && transac_id != lock_entry.transac_id){
                 return false;
             }
             else if(lock_entry.type == null){

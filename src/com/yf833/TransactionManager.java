@@ -114,13 +114,13 @@ public class TransactionManager {
             //increment time after processing each line
             time++;
 
-//            if(time == 5){
-//                querystate();
-//            }
+            if(time == 7){
+                querystate();
+            }
 
         }
 
-
+        dump();
         System.out.println();
     }
 
@@ -166,7 +166,7 @@ public class TransactionManager {
                 //acquire write-lock for all sites containing the current variable
                 for(int siteindex : sitescontainingvar.get(a.variable)){
                     //check if we can acquire a write lock
-                    if(Util.canAcquire(sites[siteindex - 1].locktable.get(a.variable), "WRITE")){
+                    if(Util.canAcquire(sites[siteindex - 1].locktable.get(a.variable), "WRITE", a.transac_id)){
                         sites[siteindex-1].locktable.get(a.variable).add(new LockEntry(a.transac_id, "WRITE"));
 
                         //remove action from blocked (if blocked)
@@ -196,7 +196,9 @@ public class TransactionManager {
                         //update conflict graph
                         for(LockEntry le : sites[siteindex - 1].locktable.get(a.variable)){
                             //fill list with 0s and create an edge between T' and T
-                            conflict_graph.addEdge(a.transac_id-1, le.transac_id-1);
+                            if(a.transac_id != le.transac_id){
+                                conflict_graph.addEdge(a.transac_id-1, le.transac_id-1);
+                            }
                         }
                     }
                 }
@@ -206,7 +208,7 @@ public class TransactionManager {
                 //acquire read-lock for all sites containing the current variable
                 for(int siteindex : sitescontainingvar.get(a.variable)){
 
-                    if(Util.canAcquire(sites[siteindex-1].locktable.get(a.variable), "READ")) {
+                    if(Util.canAcquire(sites[siteindex-1].locktable.get(a.variable), "READ", a.transac_id)) {
                         sites[siteindex-1].locktable.get(a.variable).add(new LockEntry(a.transac_id, "READ"));
                     }else{
                         System.out.println("T" + a.transac_id + " CAN'T ACQUIRE READ LOCK FOR x" + a.variable + " AT SITE" + siteindex);
@@ -291,8 +293,10 @@ public class TransactionManager {
         for(Transaction t : transactions){
             System.out.println(t.toString());
         }
-        System.out.println("State of all the sites: ");
-        dump();
+        System.out.println("Site locktables ");
+        for (DBSite s : sites){
+            System.out.println(s.locktable.toString());
+        }
     }
 
     //TODO: process a write action

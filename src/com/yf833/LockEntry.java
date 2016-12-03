@@ -12,6 +12,11 @@ public class LockEntry {
         this.transac_id = transactionid;
     }
 
+    public String toString(){
+        String output = "";
+        output += "T" + this.transac_id + this.type;
+        return output;
+    }
 
     //compare if two LockEntries are equal
     @Override
