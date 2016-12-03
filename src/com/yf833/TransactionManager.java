@@ -24,7 +24,7 @@ public class TransactionManager {
 
     //maintain a list of transaction objects to track: isCommitted, isAborted, isRunning, startTime
     //transac_id --> Trasnaction
-    public static ArrayList<Transaction> transactions = new ArrayList<>();
+    public static HashMap<Integer, Transaction> transactions = new HashMap<>();
 
 
     // track actions that are blocked
@@ -133,46 +133,31 @@ public class TransactionManager {
         switch(a.type){
             case "begin":
                 //create a new transaction
-                transactions.add(new Transaction(a.transac_id, time, Transaction.Type.DEFAULT));
+                transactions.put(a.transac_id, new Transaction(a.transac_id, time, Transaction.Type.DEFAULT));
                 conflict_graph.addTransac(a.transac_id);
                 break;
 
             case "beginRO" :
 
                 //create a new transaction
-                transactions.add(new Transaction(a.transac_id, time, Transaction.Type.READONLY));
+                transactions.put(a.transac_id, new Transaction(a.transac_id, time, Transaction.Type.READONLY));
                 conflict_graph.addTransac(a.transac_id);
 
                 for (DBSite d : sites) {
                     for (Integer i : d.datatable.keySet()){
-
-                        for(Transaction t : transactions){
-                            if(t.transactionID == a.transac_id && t.type == Transaction.Type.READONLY){
-                                t.data_table_from_lastcommit.put(i, d.datatable.get(i));
-                            }
+                        if(transactions.get(a.transac_id).type == Transaction.Type.READONLY){
+                            transactions.get(a.transac_id).data_table_from_lastcommit.put(i, d.datatable.get(i));
                         }
-
                     }
                   }
                 break;
 
             case "end":
-                for(Transaction t : transactions){
-                    if(t.transactionID == a.transac_id){
-                        t.status = Transaction.Status.COMMITED;
-                    }
-                }
-
                 //commit the current transaction -- (call commit at all sites -- some sites may not have any pending actions for this transaction)
-                Transaction current_t = null;
-                for(Transaction t : transactions){
-                    if(t.transactionID == a.transac_id){
-                        current_t = t;
-                    }
-                }
+                transactions.get(a.transac_id).status = Transaction.Status.COMMITED;
 
                 for(DBSite s : sites){
-                    s.commit(a.transac_id, current_t.type);
+                    s.commit(a.transac_id, transactions.get(a.transac_id).type);
                 }
 
                 //update the conflict graph
@@ -203,11 +188,7 @@ public class TransactionManager {
                         //add action to waiting queue (if not already there)
                         if(!blocked_actions.contains(a)) {
                             newblocked_actions.add(a);
-                            for(Transaction t : transactions){
-                                if(t.transactionID == a.transac_id){
-                                    t.status = Transaction.Status.WAITING;
-                                }
-                            }
+                            transactions.get(a.transac_id).status = Transaction.Status.WAITING;
                         }
 
                         //update conflict graph
@@ -224,13 +205,10 @@ public class TransactionManager {
             case "R":
 
                 //CASE 1: READONLY transactions
-                for(Transaction t : transactions){
-                    if(t.transactionID == a.transac_id && t.type == Transaction.Type.READONLY){
-                        System.out.println("\nREAD: T" + a.transac_id + " reads x" + a.variable + "=" + t.data_table_from_lastcommit.get(a.variable));
-                        break;
-                    }
+                if(transactions.get(a.transac_id).type == Transaction.Type.READONLY){
+                    System.out.println("\nREAD: T" + a.transac_id + " reads x" + a.variable + "=" + transactions.get(a.transac_id).data_table_from_lastcommit.get(a.variable));
+                    break;
                 }
-
 
                 //CASE 2: DEFAULT transactions
                 //acquire read-lock for all sites containing the current variable
@@ -256,11 +234,7 @@ public class TransactionManager {
                         //add action to waiting queue (if not already there)
                         if(!blocked_actions.contains(a)) {
                             newblocked_actions.add(a);
-                            for(Transaction t : transactions){
-                                if(t.transactionID == a.transac_id){
-                                    t.status = Transaction.Status.WAITING;
-                                }
-                            }
+                            transactions.get(a.transac_id).status = Transaction.Status.WAITING;
                         }
 
                         //update conflict graph
@@ -278,6 +252,16 @@ public class TransactionManager {
 
             case "dump":
                 dump();
+                break;
+
+            case "fail":
+                // set isFailed flag to true for that DBSite
+                // erase the locktable for the failed site
+                // abort all non-readonly transactions that have accessed that fail site
+                // for all actions going to that site, put the action in the waiting queue
+                break;
+
+            case "recover":
                 break;
 
             default:
@@ -301,11 +285,11 @@ public class TransactionManager {
         // take the set of transactions that are involved in the abortYoungestInCycle
         // get references to those transactions from the set of cycle IDs
         ArrayList<Transaction> abort_candidates = new ArrayList<>();
-        for(Transaction t : transactions){
+        for(int t_id : transactions.keySet()){
             //if a transaction is contained in the cycle, add it to abort candidates
             // (we subtract 1 from the transaction id since the graph's indices are transac_id -1)
-            if(cycle.contains(t.transactionID-1)){
-                abort_candidates.add(t);
+            if(cycle.contains(transactions.get(t_id).transactionID-1)){
+                abort_candidates.add(transactions.get(t_id));
             }
         }
 
@@ -349,8 +333,8 @@ public class TransactionManager {
 
     //print the states of the TM and all DBSites
     public static void querystate(){
-        for(Transaction t : transactions){
-            System.out.println(t.toString());
+        for(int t_id : transactions.keySet()) {
+            System.out.println(transactions.get(t_id).toString());
         }
         System.out.println("Site locktables ");
         for (DBSite s : sites){
@@ -358,20 +342,6 @@ public class TransactionManager {
         }
     }
 
-    //TODO: process a write action
-    public static void processW(){
-
-    }
-
-    //TODO: process a read action
-    public static void processR(Action a){
-        //search for a site that contains the variable
-        for(DBSite site : sites){
-            if(site.variables.contains(a.variable)){
-                System.out.println(a.toString() + " from site ");
-            }
-        }
-    }
 
 
     //dump the committed values of all copies of all variables at all sites, sorted by site

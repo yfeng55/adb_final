@@ -25,6 +25,10 @@ public class DBSite {
     // the locktable for this site (variable --> {type: W, transac_id: i})
     public HashMap<Integer, ArrayList<LockEntry>> locktable;
 
+    //the set of transactions that are currently accessing this site
+    public HashSet<Transaction> current_transactions;
+
+
     boolean hasRecovered;
 
     public DBSite(int id) {

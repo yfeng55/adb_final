@@ -48,5 +48,17 @@ public class Transaction {
         return output;
     }
 
+    //compare if two Transactions are equal
+    @Override
+    public boolean equals(Object tr2){
+        boolean is_same = false;
+        if (tr2 != null && tr2 instanceof Transaction){
+
+            Transaction transaction2 = (Transaction) tr2;
+
+            is_same = (this.transactionID == transaction2.transactionID);
+        }
+        return is_same;
+    }
 
 }
