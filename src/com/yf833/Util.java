@@ -28,7 +28,7 @@ public class Util {
             if(transactionid.equals("")){
                 newaction = new Action(actiontype);
             }else{
-                if(actiontype.equalsIgnoreCase("begin") || actiontype.equalsIgnoreCase("end")){
+                if(actiontype.equalsIgnoreCase("begin") || actiontype.equalsIgnoreCase("beginRO") || actiontype.equalsIgnoreCase("end")){
                     // begin() / end() action
                     newaction = new Action(actiontype, Integer.parseInt(transactionid), time);
                 }else{
