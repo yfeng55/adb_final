@@ -25,9 +25,6 @@ public class DBSite {
     // the locktable for this site (variable --> {type: W, transac_id: i})
     public HashMap<Integer, ArrayList<LockEntry>> locktable;
 
-    //the set of transactions that are currently accessing this site
-    public HashSet<Transaction> current_transactions;
-
 
     boolean hasRecovered;
 
@@ -40,8 +37,10 @@ public class DBSite {
         pendingactions = new HashMap<>();
 
         // var_id --> value
-        datatable = new HashMap<>();
-        hasRecovered = false;
+        this.datatable = new HashMap<>();
+        this.hasRecovered = false;
+
+
     }
 
     // commit the specified transaction
@@ -71,6 +70,8 @@ public class DBSite {
                 throw new Exception();
             }
         }
+
+        //remove the row for this transaction in pending actions
         this.pendingactions.remove(transac_id);
 
     }
@@ -105,6 +106,13 @@ public class DBSite {
         }
     }
 
+
+    //clear the lock table (free all locks for all transactions)
+    public void clearLockTable(){
+        for(int var_id : this.locktable.keySet()){
+            this.locktable.get(var_id).clear();
+        }
+    }
 
 
 

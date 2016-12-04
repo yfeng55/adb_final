@@ -28,7 +28,13 @@ public class Util {
             if(transactionid.equals("")){
                 newaction = new Action(actiontype);
             }else{
-                newaction = new Action(actiontype, Integer.parseInt(transactionid), time);
+                if(actiontype.equalsIgnoreCase("begin") || actiontype.equalsIgnoreCase("end")){
+                    // begin() / end() action
+                    newaction = new Action(actiontype, Integer.parseInt(transactionid), time);
+                }else{
+                    // fail() / recover() action
+                    newaction = new Action(actiontype, Integer.parseInt(transactionid));
+                }
             }
         }
         //create a R() action

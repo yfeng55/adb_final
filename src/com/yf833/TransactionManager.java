@@ -154,21 +154,23 @@ public class TransactionManager {
 
             case "end":
                 //commit the current transaction -- (call commit at all sites -- some sites may not have any pending actions for this transaction)
-                transactions.get(a.transac_id).status = Transaction.Status.COMMITED;
+                if(transactions.get(a.transac_id).status != Transaction.Status.ABORTED){
+                    transactions.get(a.transac_id).status = Transaction.Status.COMMITED;
 
-                for(DBSite s : sites){
-                    s.commit(a.transac_id, transactions.get(a.transac_id).type);
+                    for(DBSite s : sites){
+                        s.commit(a.transac_id, transactions.get(a.transac_id).type);
+                    }
+
+                    //update the conflict graph
+                    conflict_graph.commit_or_abort(a.transac_id);
                 }
-
-                //update the conflict graph
-                conflict_graph.commit_or_abort(a.transac_id);
                 break;
 
             case "W":
                 //acquire write-lock for all sites containing the current variable
                 for(int siteindex : sitescontainingvar.get(a.variable)){
                     //check if we can acquire a write lock
-                    if(Util.canAcquire(sites[siteindex - 1].locktable.get(a.variable), "WRITE", a.transac_id)){
+                    if(Util.canAcquire(sites[siteindex - 1].locktable.get(a.variable), "WRITE", a.transac_id) && !sites[siteindex-1].isFailed){
                         sites[siteindex-1].locktable.get(a.variable).add(new LockEntry(a.transac_id, "WRITE"));
 
                         //remove action from blocked (if blocked)
@@ -183,7 +185,7 @@ public class TransactionManager {
                         sites[siteindex-1].pendingactions.get(a.transac_id).add(a);
 
                     } else {
-                        //System.out.println("T" + a.transac_id + " CAN'T ACQUIRE WRITE LOCK FOR x" + a.variable + " AT SITE" + siteindex);
+                        System.out.println("T" + a.transac_id + " CAN'T ACQUIRE WRITE LOCK FOR x" + a.variable + " AT SITE" + siteindex);
 
                         //add action to waiting queue (if not already there)
                         if(!blocked_actions.contains(a)) {
@@ -214,7 +216,7 @@ public class TransactionManager {
                 //acquire read-lock for all sites containing the current variable
                 for(int siteindex : sitescontainingvar.get(a.variable)){
 
-                    if(Util.canAcquire(sites[siteindex-1].locktable.get(a.variable), "READ", a.transac_id)) {
+                    if(Util.canAcquire(sites[siteindex-1].locktable.get(a.variable), "READ", a.transac_id) && !sites[siteindex-1].isFailed) {
                         sites[siteindex-1].locktable.get(a.variable).add(new LockEntry(a.transac_id, "READ"));
 
                         //remove action from blocked (if blocked)
@@ -229,7 +231,7 @@ public class TransactionManager {
                         sites[siteindex-1].pendingactions.get(a.transac_id).add(a);
 
                     }else{
-                        //System.out.println("T" + a.transac_id + " CAN'T ACQUIRE READ LOCK FOR x" + a.variable + " AT SITE" + siteindex);
+                        System.out.println("T" + a.transac_id + " CAN'T ACQUIRE READ LOCK FOR x" + a.variable + " AT SITE" + siteindex);
 
                         //add action to waiting queue (if not already there)
                         if(!blocked_actions.contains(a)) {
@@ -256,12 +258,35 @@ public class TransactionManager {
 
             case "fail":
                 // set isFailed flag to true for that DBSite
+                sites[a.site_id-1].isFailed = true;
+
                 // erase the locktable for the failed site
-                // abort all non-readonly transactions that have accessed that fail site
-                // for all actions going to that site, put the action in the waiting queue
+                sites[a.site_id-1].clearLockTable();
+
+                // abort all transactions that have accessed that fail site
+                for(int transac_id : sites[a.site_id-1].pendingactions.keySet() ){
+                    abortTransaction(transactions.get(transac_id));
+                }
+
                 break;
 
             case "recover":
+                // set isFailed flag to false for that DBSite
+                sites[a.site_id-1].isFailed = false;
+
+                // copy the datatable, pending writes, and locktable of a (even nubered) non-failed site
+                DBSite copy_site = null;
+                for(int i=2; i<=10; i+=2){
+                    if(sites[i-1].isFailed == false){
+                        copy_site = sites[i-1];
+                        break;
+                    }
+                }
+
+                sites[a.site_id-1].datatable = new HashMap<>(copy_site.datatable);
+                sites[a.site_id-1].pendingactions = new HashMap<>(copy_site.pendingactions);
+                sites[a.site_id-1].locktable = new HashMap<>(copy_site.locktable);
+
                 break;
 
             default:
@@ -279,7 +304,7 @@ public class TransactionManager {
     }
 
 
-
+    //find the youngest transaction in a cycle (set of transactions) and call abort on it
     public static void abortYoungestInCycle(HashSet<Integer> cycle) throws Exception {
 
         // take the set of transactions that are involved in the abortYoungestInCycle
@@ -306,29 +331,35 @@ public class TransactionManager {
             }
         }
 
+        abortTransaction(youngest_t);
+
+    }
+
+    //abort the specified transaction
+    public static void abortTransaction(Transaction abort_transac){
         //remove this transaction's actions from the blocked list
         newblocked_actions = new ArrayList<>();
         for(Action a : blocked_actions){
-            if(a.transac_id != youngest_t.transactionID){
+            if(a.transac_id != abort_transac.transactionID){
                 newblocked_actions.add(a);
             }
         }
         blocked_actions = newblocked_actions;
 
 
-        System.out.println("--> aborting transaction T" + youngest_t.transactionID);
+        System.out.println("--> aborting transaction T" + abort_transac.transactionID);
 
-        youngest_t.status = Transaction.Status.ABORTED;
+        abort_transac.status = Transaction.Status.ABORTED;
 
         // call the abort() function at all DBSites (clears the locktable of this transaction's locks, clear pending writes for this transaction)
         for(DBSite s : sites){
-            s.abort(youngest_t.transactionID);
+            s.abort(abort_transac.transactionID);
         }
 
         //update conflict graph to reflect the abort
-        conflict_graph.commit_or_abort(youngest_t.transactionID);
-
+        conflict_graph.commit_or_abort(abort_transac.transactionID);
     }
+
 
 
     //print the states of the TM and all DBSites
@@ -353,7 +384,8 @@ public class TransactionManager {
     }
 
     public static void dump(DBSite i) {
-        System.out.print("Dump For Site" + i.id + " : ");
+        System.out.print("Dump For Site" + i.id + " | ");
+        System.out.print("Failed:" + i.isFailed + " | ");
         ArrayList<Integer> vars = new ArrayList<Integer>(i.datatable.keySet());
         Collections.sort(vars);
         for (Integer j : vars) {

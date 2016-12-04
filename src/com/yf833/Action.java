@@ -13,9 +13,19 @@ public class Action {
     //only for W() actions
     public int value;
 
+    //only for fail() and recover() actions
+    public int site_id;
+
+
     //constructor for dump() action
     public Action(String type){
         this.type = type;
+    }
+
+    //constructor for fail() and recover() actions
+    public Action(String type, int site_id){
+        this.type = type;
+        this.site_id = site_id;
     }
 
     //constructor for begin() and end() actions
