@@ -283,9 +283,9 @@ public class TransactionManager {
                     }
                 }
 
-                sites[a.site_id-1].datatable = new HashMap<>(copy_site.datatable);
+//                sites[a.site_id-1].datatable = new HashMap<>(copy_site.datatable);
                 sites[a.site_id-1].pendingactions = new HashMap<>(copy_site.pendingactions);
-                sites[a.site_id-1].locktable = new HashMap<>(copy_site.locktable);
+//                sites[a.site_id-1].locktable = new HashMap<>(copy_site.locktable);
 
                 break;
 
