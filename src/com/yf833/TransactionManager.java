@@ -1,11 +1,7 @@
 package com.yf833;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Scanner;
+import java.util.*;
 
 // the TransactionManager initializes the components of the system and accepts transactions
 // - initializes the sites (set to 10 by default)
@@ -195,7 +191,7 @@ public class TransactionManager {
                 + " AT SITE" + siteindex);
           }
           // add action to waiting queue (if not already there)
-          if (!blocked_actions.contains(a)) {
+          if (!blocked_actions.contains(a) && transactions.get(a.transac_id).status != Transaction.Status.ABORTED) {
             newblocked_actions.add(a);
             transactions.get(a.transac_id).status = Transaction.Status.WAITING;
           }
@@ -247,7 +243,7 @@ public class TransactionManager {
           }
 
           // add action to waiting queue (if not already there)
-          if (!blocked_actions.contains(a)) {
+          if (!blocked_actions.contains(a) && transactions.get(a.transac_id).status != Transaction.Status.ABORTED) {
             newblocked_actions.add(a);
             transactions.get(a.transac_id).status = Transaction.Status.WAITING;
           }
@@ -276,10 +272,10 @@ public class TransactionManager {
       sites[a.site_id - 1].clearLockTable();
 
       // abort all transactions that have accessed that fail site
-      for (int transac_id : sites[a.site_id - 1].pendingactions.keySet()) {
+      HashSet<Integer> transactions_to_abort = new HashSet<>(sites[a.site_id - 1].pendingactions.keySet());
+      for (int transac_id : transactions_to_abort) {
         abortTransaction(transactions.get(transac_id));
       }
-
       break;
 
     case "recover" :
