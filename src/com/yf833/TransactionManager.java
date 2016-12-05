@@ -291,10 +291,12 @@ public class TransactionManager {
         }
       }
 
-      // sites[a.site_id-1].datatable = new HashMap<>(copy_site.datatable);
-      sites[a.site_id - 1].pendingactions = new HashMap<>(copy_site.pendingactions);
-      // sites[a.site_id-1].locktable = new HashMap<>(copy_site.locktable);
-
+      if(copy_site == null){
+        System.out.println("ERROR: Can't recover since there are no available site to copy data from");
+        System.exit(1);
+      }else{
+        sites[a.site_id - 1].pendingactions = new HashMap<>(copy_site.pendingactions);
+      }
       break;
 
     default :
