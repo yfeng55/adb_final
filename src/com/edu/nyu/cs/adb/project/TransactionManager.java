@@ -1,15 +1,22 @@
-package com.yf833;
+package com.edu.nyu.cs.adb.project;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Scanner;
 
-// the TransactionManager initializes the components of the system and accepts transactions
-// - initializes the sites (set to 10 by default)
-// - initializes variables (set to 20 by default)
-// - creates copies of variables based on the following rule
-// -> odd indexed variables are at a single site (1 + i%10)
-// -> even indexed variables are at all sites
-//
+/**
+ * the TransactionManager initializes the components of the system and accepts transactions
+ * - initializes the sites (set to 10 by default)
+ * - initializes variables (set to 20 by default)
+ * - creates copies of variables based on the following rule
+ * -> odd indexed variables are at a single site (1 + i%10)
+ * -> even indexed variables are at all sites
+ * 
+ * @author Abhineet & Yiji
+ */
 public class TransactionManager {
 
   public static final int NUM_SITES = 10;
@@ -125,7 +132,14 @@ public class TransactionManager {
   }
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  // process a single begin(), end(), R(), or W() action
+  /**
+   * process a single begin(), end(), R(), or W() action
+   * 
+   * @param a Action to be processed
+   * @param time time of processing
+   * @throws Exception invalid type of action
+   * @author Abhineet & Yiji
+   */
   public static void processAction(Action a, int time) throws Exception {
 
     switch (a.type) {
@@ -191,7 +205,8 @@ public class TransactionManager {
                 + " AT SITE" + siteindex);
           }
           // add action to waiting queue (if not already there)
-          if (!blocked_actions.contains(a) && transactions.get(a.transac_id).status != Transaction.Status.ABORTED) {
+          if (!blocked_actions.contains(a)
+              && transactions.get(a.transac_id).status != Transaction.Status.ABORTED) {
             newblocked_actions.add(a);
             transactions.get(a.transac_id).status = Transaction.Status.WAITING;
           }
@@ -243,7 +258,8 @@ public class TransactionManager {
           }
 
           // add action to waiting queue (if not already there)
-          if (!blocked_actions.contains(a) && transactions.get(a.transac_id).status != Transaction.Status.ABORTED) {
+          if (!blocked_actions.contains(a)
+              && transactions.get(a.transac_id).status != Transaction.Status.ABORTED) {
             newblocked_actions.add(a);
             transactions.get(a.transac_id).status = Transaction.Status.WAITING;
           }
@@ -272,7 +288,8 @@ public class TransactionManager {
       sites[a.site_id - 1].clearLockTable();
 
       // abort all transactions that have accessed that fail site
-      HashSet<Integer> transactions_to_abort = new HashSet<>(sites[a.site_id - 1].pendingactions.keySet());
+      HashSet<Integer> transactions_to_abort = new HashSet<>(
+          sites[a.site_id - 1].pendingactions.keySet());
       for (int transac_id : transactions_to_abort) {
         abortTransaction(transactions.get(transac_id));
       }
@@ -291,10 +308,11 @@ public class TransactionManager {
         }
       }
 
-      if(copy_site == null){
-        System.out.println("ERROR: Can't recover since there are no available site to copy data from");
+      if (copy_site == null) {
+        System.out
+            .println("ERROR: Can't recover since there are no available site to copy data from");
         System.exit(1);
-      }else{
+      } else {
         sites[a.site_id - 1].pendingactions = new HashMap<>(copy_site.pendingactions);
       }
       break;
@@ -312,7 +330,13 @@ public class TransactionManager {
     }
   }
 
-  // find the youngest transaction in a cycle (set of transactions) and call abort on it
+  /**
+   * find the youngest transaction in a cycle (set of transactions) and call abort on it
+   * 
+   * @param cycle Hashset of transactions involved in the cycle
+   * @throws Exception when empty list of abort_candidates are processed.
+   * @author Abhineet & Yiji
+   */
   public static void abortYoungestInCycle(HashSet<Integer> cycle) throws Exception {
 
     // take the set of transactions that are involved in the abortYoungestInCycle
@@ -342,6 +366,9 @@ public class TransactionManager {
   }
 
   // abort the specified transaction
+  /**
+   * @param abort_transac
+   */
   public static void abortTransaction(Transaction abort_transac) {
     // remove this transaction's actions from the blocked list
     newblocked_actions = new ArrayList<>();
@@ -377,7 +404,11 @@ public class TransactionManager {
     }
   }
 
-  // dump the committed values of all copies of all variables at all sites, sorted by site
+  /**
+   * dump the committed values of all copies of all variables at all sites, sorted by site
+   * 
+   * @author Abhineet & Yiji
+   */
   public static void dump() {
     System.out.println("~Dumping all~");
     for (DBSite site : sites) {
@@ -385,6 +416,12 @@ public class TransactionManager {
     }
   }
 
+  /**
+   * dumps all the variable at a particular site
+   * 
+   * @param i Site to be dumped
+   * @author Abhineet & Yiji
+   */
   public static void dump(DBSite i) {
     System.out.print("Dump For Site" + i.id + " | ");
     System.out.print("Failed:" + i.isFailed + " | ");
@@ -396,6 +433,12 @@ public class TransactionManager {
     System.out.println();
   }
 
+  /**
+   * dumps the variable for each site
+   * 
+   * @param i variable to be dumped
+   * @author Abhineet & Yiji
+   */
   public static void dump(int i) {
     ArrayList<Integer> Sites = sitescontainingvar.get(i);
     System.out.println("Variable x" + i + "at => ");
@@ -405,8 +448,14 @@ public class TransactionManager {
     System.out.println();
   }
 
-  // return true if a transaction is blocked (i.e. any of the actions in blocked_actions belong to
-  // this transaction)
+  /**
+   * return true if a transaction is blocked (i.e. any of the actions in blocked_actions belong to
+   * this transaction)
+   * 
+   * @param transac_id
+   * @return return true if a transaction is blocked else false
+   * @author Abhineet & Yiji
+   */
   public static boolean isBlocked(int transac_id) {
     for (Action a : blocked_actions) {
       if (a.transac_id == transac_id) {

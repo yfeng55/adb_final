@@ -1,5 +1,10 @@
-package com.yf833;
+package com.edu.nyu.cs.adb.project;
 
+/**
+ * Class to denote each action performed by transaction manager.
+ * 
+ * @author Abhineet & Yiji
+ */
 public class Action {
 
   public int transac_id;
@@ -56,10 +61,6 @@ public class Action {
     return output;
   }
 
-  /*
-   * (non-Javadoc)
-   * @see java.lang.Object#hashCode()
-   */
   @Override
   public int hashCode() {
     final int prime = 31;
@@ -73,10 +74,7 @@ public class Action {
     return result;
   }
 
-  /*
-   * (non-Javadoc)
-   * @see java.lang.Object#equals(java.lang.Object)
-   */
+  // compare if two Actions are equal
   @Override
   public boolean equals(Object obj) {
     if (this == obj)
@@ -104,7 +102,6 @@ public class Action {
     return true;
   }
 
-  // compare if two Actions are equal
   /*
    * @Override
    * public boolean equals(Object a2){
