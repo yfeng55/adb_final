@@ -15,7 +15,7 @@ public class TransactionManager {
   public static final int NUM_SITES = 10;
   public static final int NUM_VARIABLES = 20;
 
-  public static boolean isVerbose = true;
+  public static boolean isVerbose = false;
 
   // list of sites
   public static DBSite[] sites;
