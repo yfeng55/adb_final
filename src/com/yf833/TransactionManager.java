@@ -19,7 +19,7 @@ public class TransactionManager {
   public static final int NUM_SITES = 10;
   public static final int NUM_VARIABLES = 20;
 
-  public static boolean isVerbose = false;
+  public static boolean isVerbose = true;
 
   // list of sites
   public static DBSite[] sites;
@@ -209,6 +209,7 @@ public class TransactionManager {
           }
         }
       }
+      blocked_actions = newblocked_actions;
       break;
 
     case "R" :
@@ -260,6 +261,7 @@ public class TransactionManager {
           }
         }
       }
+      blocked_actions = newblocked_actions;
       break;
 
     case "dump" :
