@@ -3,7 +3,7 @@ package com.edu.nyu.cs.adb.project;
 /**
  * Class to denote each action performed by transaction manager.
  * 
- * @author Abhineet & Yiji
+ * @author Abhineet & Yijie
  */
 public class Action {
 

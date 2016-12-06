@@ -15,14 +15,14 @@ import java.util.Scanner;
  * -> odd indexed variables are at a single site (1 + i%10)
  * -> even indexed variables are at all sites
  * 
- * @author Abhineet & Yiji
+ * @author Abhineet & Yijie
  */
 public class TransactionManager {
 
   public static final int NUM_SITES = 10;
   public static final int NUM_VARIABLES = 20;
 
-  public static boolean isVerbose = false;
+  public static boolean isVerbose = true;
 
   // list of sites
   public static DBSite[] sites;
@@ -143,7 +143,7 @@ public class TransactionManager {
    * @param a Action to be processed
    * @param time time of processing
    * @throws Exception invalid type of action
-   * @author Abhineet & Yiji
+   * @author Abhineet & Yijie
    */
   public static void processAction(Action a, int time) throws Exception {
 
@@ -209,6 +209,13 @@ public class TransactionManager {
             System.out.println("T" + a.transac_id + " CAN'T ACQUIRE WRITE LOCK FOR x" + a.variable
                 + " AT SITE" + siteindex);
           }
+
+          //if the site is failed, then add it to that site's pending actions
+          if (sites[siteindex - 1].pendingactions.get(a.transac_id) == null) {
+            sites[siteindex - 1].pendingactions.put(a.transac_id, new ArrayList<Action>());
+          }
+          sites[siteindex - 1].pendingactions.get(a.transac_id).add(a);
+
           // add action to waiting queue (if not already there)
           if (!blocked_actions.contains(a)
               && transactions.get(a.transac_id).status != Transaction.Status.ABORTED) {
@@ -304,7 +311,7 @@ public class TransactionManager {
       // set isFailed flag to false for that DBSite
       sites[a.site_id - 1].isFailed = false;
 
-      // copy the datatable, pending writes, and locktable of a (even nubered) non-failed site
+      // copy the datatable of a (even nubered) non-failed site
       DBSite copy_site = null;
       for (int i = 2; i <= 10; i += 2) {
         if (sites[i - 1].isFailed == false) {
@@ -318,8 +325,9 @@ public class TransactionManager {
             .println("ERROR: Can't recover since there are no available site to copy data from");
         System.exit(1);
       } else {
-        sites[a.site_id - 1].pendingactions = new HashMap<>(copy_site.pendingactions);
+        sites[a.site_id - 1].datatable = new HashMap<>(copy_site.datatable);
       }
+
       break;
 
     default :
@@ -340,7 +348,7 @@ public class TransactionManager {
    * 
    * @param cycle Hashset of transactions involved in the cycle
    * @throws Exception when empty list of abort_candidates are processed.
-   * @author Abhineet & Yiji
+   * @author Abhineet & Yijie
    */
   public static void abortYoungestInCycle(HashSet<Integer> cycle) throws Exception {
 
@@ -412,7 +420,7 @@ public class TransactionManager {
   /**
    * dump the committed values of all copies of all variables at all sites, sorted by site
    * 
-   * @author Abhineet & Yiji
+   * @author Abhineet & Yijie
    */
   public static void dump() {
     System.out.println("~Dumping all~");
@@ -425,7 +433,7 @@ public class TransactionManager {
    * dumps all the variable at a particular site
    * 
    * @param i Site to be dumped
-   * @author Abhineet & Yiji
+   * @author Abhineet & Yijie
    */
   public static void dump(DBSite i) {
     System.out.print("Dump For Site" + i.id + " | ");
@@ -442,7 +450,7 @@ public class TransactionManager {
    * dumps the variable for each site
    * 
    * @param i variable to be dumped
-   * @author Abhineet & Yiji
+   * @author Abhineet & Yijie
    */
   public static void dump(int i) {
     ArrayList<Integer> Sites = sitescontainingvar.get(i);
@@ -459,7 +467,7 @@ public class TransactionManager {
    * 
    * @param transac_id
    * @return return true if a transaction is blocked else false
-   * @author Abhineet & Yiji
+   * @author Abhineet & Yijie
    */
   public static boolean isBlocked(int transac_id) {
     for (Action a : blocked_actions) {

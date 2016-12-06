@@ -3,7 +3,7 @@ package com.edu.nyu.cs.adb.project;
 /**
  * Class to maintain the type of lock and the transaction holding that lock
  * 
- * @author Abhineet & Yiji
+ * @author Abhineet & Yijie
  */
 public class LockEntry {
 

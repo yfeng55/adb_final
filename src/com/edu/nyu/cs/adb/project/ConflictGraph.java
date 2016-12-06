@@ -8,7 +8,7 @@ import java.util.Stack;
 /**
  * class to represent conflict graph used to detect cycles
  * 
- * @author Abhineet & Yiji
+ * @author Abhineet & Yijie
  */
 public class ConflictGraph {
 
@@ -30,7 +30,7 @@ public class ConflictGraph {
    * add another transaction to the graph
    * 
    * @param transac_id transaction to be added
-   * @author Abhineet & Yiji
+   * @author Abhineet & Yijie
    */
   public void addTransac(int transac_id) {
 
@@ -47,7 +47,7 @@ public class ConflictGraph {
    * 
    * @param node1 edge from node
    * @param node2 edge to node
-   * @author Abhineet & Yiji
+   * @author Abhineet & Yijie
    */
   public void addEdge(int node1, int node2) {
     if (!this.adj_list.get(node1).contains(node2)) {
@@ -61,7 +61,7 @@ public class ConflictGraph {
    * @param node node to be traversed
    * @param visited array of visited nodes
    * @param component_members maintain a set of member nodes for the current component
-   * @author Abhineet & Yiji
+   * @author Abhineet & Yijie
    */
   private void dfsTraverse(int node, boolean visited[], HashSet<Integer> component_members) {
 
@@ -84,7 +84,7 @@ public class ConflictGraph {
    * return the transpose of the current conflict graph
    * 
    * @return transposed graph
-   * @author Abhineet & Yiji
+   * @author Abhineet & Yijie
    */
   private ConflictGraph getTranspose() {
     ConflictGraph gr_transpose = new ConflictGraph(this.adj_list.size());
@@ -104,7 +104,7 @@ public class ConflictGraph {
    * @param node node to be filled
    * @param visited visited array matrix
    * @param stack stack to be filled
-   * @author Abhineet & Yiji
+   * @author Abhineet & Yijie
    */
   private void fillStack(int node, boolean visited[], Stack stack) {
     // initialize nodes to visited
@@ -125,7 +125,7 @@ public class ConflictGraph {
    * from a list of strongly connected components, return the set of transactions that form a cycle
    * 
    * @return set of transactions forming cycle
-   * @author Abhineet & Yiji
+   * @author Abhineet & Yijie
    */
   public HashSet<Integer> getCycle() {
 
@@ -179,7 +179,7 @@ public class ConflictGraph {
    * update the graph to reflect a committed transaction
    * 
    * @param transac_id id to be commited or aborted
-   * @author Abhineet & Yiji
+   * @author Abhineet & Yijie
    */
   public void commit_or_abort(int transac_id) {
 

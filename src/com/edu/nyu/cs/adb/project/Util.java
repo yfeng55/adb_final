@@ -10,7 +10,7 @@ public class Util {
    * @param inputstring String to be parsed
    * @param time time of parsing
    * @return Action converted from string
-   * @author Abhineet & Yiji
+   * @author Abhineet & Yijie
    */
   public static Action strToAction(String inputstring, int time) {
 
@@ -76,7 +76,7 @@ public class Util {
    * @param transac_id id of transaction holding the lock
    * @return true if lock can be acquired else false
    * @throws Exception
-   * @author Abhineet & Yiji
+   * @author Abhineet & Yijie
    */
   public static boolean canAcquire(ArrayList<LockEntry> lock_entries, String requestedtype,
       int transac_id) throws Exception {
@@ -122,7 +122,7 @@ public class Util {
    * 
    * @param arr array to be filled
    * @param n number of zeros
-   * @author Abhineet & Yiji
+   * @author Abhineet & Yijie
    */
   public static void fillwithNZeroes(ArrayList<Integer> arr, int n) {
     int numzeroes = n - arr.size();

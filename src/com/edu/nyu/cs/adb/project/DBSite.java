@@ -7,7 +7,7 @@ import java.util.HashSet;
 /**
  * each site re presents a separate database -- it has its own lock table and variable copies
  * 
- * @author Abhineet & Yiji
+ * @author Abhineet & Yijie
  */
 public class DBSite {
 
@@ -50,7 +50,7 @@ public class DBSite {
    * @param transac_id id of transaction to be comitted
    * @param transac_type type of transaction
    * @throws Exception when invalid action type
-   * @author Abhineet & Yiji
+   * @author Abhineet & Yijie
    */
   public void commit(int transac_id, Transaction.Type transac_type) throws Exception {
     removeAllLocksForTransaction(transac_id);
@@ -87,7 +87,7 @@ public class DBSite {
    * abort the specified transaction
    * 
    * @param transac_id id of transaction to be aborted
-   * @author Abhineet & Yiji
+   * @author Abhineet & Yijie
    */
   public void abort(int transac_id) {
     // clear the transaction's pending writes at this site
@@ -103,7 +103,7 @@ public class DBSite {
    * free all locks for this transaction
    * 
    * @param transac_id transaction id of the transaction removing the locks
-   * @author Abhineet & Yiji
+   * @author Abhineet & Yijie
    */
   private void removeAllLocksForTransaction(int transac_id) {
     for (int var_id : this.locktable.keySet()) {
@@ -122,7 +122,7 @@ public class DBSite {
   /**
    * clear the lock table (free all locks for all transactions)
    * 
-   * @author Abhineet & Yiji
+   * @author Abhineet & Yijie
    */
   public void clearLockTable() {
     for (int var_id : this.locktable.keySet()) {
@@ -133,7 +133,7 @@ public class DBSite {
   /**
    * updates failure stats
    * 
-   * @author Abhineet & Yiji
+   * @author Abhineet & Yijie
    */
   public void failure() {
     isFailed = true;

@@ -6,7 +6,7 @@ import java.util.HashMap;
  * A class to maintain information about a particular transaction which includes its status, its
  * type, its ID and start time.
  * 
- * @author Abhineet & Yiji
+ * @author Abhineet & Yijie
  */
 public class Transaction {
 
