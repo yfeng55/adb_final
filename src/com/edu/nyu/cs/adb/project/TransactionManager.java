@@ -210,7 +210,7 @@ public class TransactionManager {
                 + " AT SITE" + siteindex);
           }
 
-          //if the site is failed, then add it to that site's pending actions
+          // if the site is failed, then add it to that site's pending actions
           if (sites[siteindex - 1].pendingactions.get(a.transac_id) == null) {
             sites[siteindex - 1].pendingactions.put(a.transac_id, new ArrayList<Action>());
           }

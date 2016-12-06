@@ -1,5 +1,5 @@
-//Write request fails of an odd variable since it is present only at site failed
-//T2 should read initial value
+//Write request waits of an odd variable since it is present only at site failed.
+//As site recovers before the transaction fails which should now read the committed value.
 
 begin(T1)
 begin(T2)
