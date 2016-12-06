@@ -5,7 +5,6 @@ begin(T1)
 begin(T2)
 fail(10);
 W(T2,x9,999)
-recover(10)
 end(T1)
 recover(10)
 R(T2,x9,999)
