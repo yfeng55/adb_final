@@ -1,0 +1,11 @@
+//Read request fails of an odd variable since it is present only at site failed
+//No read value should be returned
+
+begin(T1)
+begin(T2)
+fail(10);
+R(T2,x9)
+recover(10)
+end(T1)
+recover(10)
+end(T2)

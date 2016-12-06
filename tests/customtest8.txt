@@ -1,0 +1,11 @@
+//Testing Recover
+//T2 should not be able to read as when it ended the site was down and read request was for odd variable.
+//T1 should be able to read though
+begin(T1)
+begin(T2)
+fail(2)
+R(T2,x1)
+R(T1,x1)
+end(T2)
+recover(2)
+end(T1)

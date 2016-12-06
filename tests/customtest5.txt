@@ -1,0 +1,15 @@
+//Testing recovering when multiple sites are failed.
+//Values should be read even if one site is running
+
+begin(T1)
+fail(1)
+fail(2)
+fail(3)
+fail(4)
+fail(5)
+fail(6)
+fail(7)
+fail(9)
+fail(10)
+R(T1,x2)
+end(T1)

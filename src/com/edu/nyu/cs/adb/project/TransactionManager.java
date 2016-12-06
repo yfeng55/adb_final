@@ -89,6 +89,11 @@ public class TransactionManager {
 
       // get the next line and hold all actions to perform at the current time in a list
       String nextline = scan.nextLine();
+      if (nextline.startsWith("//") || nextline.startsWith("x") || nextline.trim().length() == 0
+          || nextline.startsWith("=") || nextline.startsWith("A")) {
+        // System.out.println("SKIP");
+        continue;
+      }
       ArrayList<Action> currentactions = new ArrayList<>();
 
       // stop scanning after a newline is encountered (check for all whitespaces)

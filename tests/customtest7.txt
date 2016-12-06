@@ -1,0 +1,13 @@
+//Testing multiple transactions abortion due to site fail
+//Both the transaction should abort
+
+begin(T1)
+begin(T2)
+W(T1,x6,666)
+W(T2,x4,444)
+fail(2)
+W(T2,x8,888) 
+R(T2,x3)
+R(T1, x5)
+end(T2)
+end(T1)
